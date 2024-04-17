@@ -5,7 +5,7 @@ const Navbar = () => {
     return (
         <header className="bg-stone-800 dark:bg-stone-600 text-white shadow-md">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-                <div className="text-xl font-bold"> <Link href="/">TGC</Link></div>
+                <div className="text-xl font-bold"> <Link href="/">TGC ✼</Link></div>
 
                 <nav >
                     <ul className="flex flex-col md:flex-row space-x-4">

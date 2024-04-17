@@ -5,6 +5,7 @@ const BlogHeader = () => {
   return (
     <header>
         <div className="h-screen font-sans flex flex-col items-center justify-center">
+          
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="lg:grid lg:grid-cols-12 lg:gap-8 pt-12 lg:pt-0">
         <div className="sm:text-center md:max-w-2xl md:mx-auto lg:col-span-6 lg:text-left lg:flex lg:items-center">

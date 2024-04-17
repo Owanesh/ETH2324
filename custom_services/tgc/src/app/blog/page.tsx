@@ -1,10 +1,13 @@
-import Image from "next/image";
-import Link from "next/link";
 import BlogHeader from "./blogHeader";
 import articles from "@/app/blog/data/articles.json"; // Importing the JSON file
-import ArticleComponent from "@/components/article"; // Importing Article component
+import ArticleCardComponent from "@/components/articleCard"; // Importing Article component
 import ArticleType from "@/app/blog/data/types"; // Importing Article type
+import { Metadata } from "next";
 
+
+export const metadata: Metadata = {
+  title: "Blog – TGC",
+}
 
 export default function BlogPage() {
   return (
@@ -14,7 +17,7 @@ export default function BlogPage() {
       <div className="flex flex-wrap -mx-4">
         {articles.map((article: ArticleType, index) => (
           <div key={index} className="w-full sm:w-1/2 lg:w-1/3 px-4 mb-8">
-            <ArticleComponent article={article} />
+            <ArticleCardComponent article={article} />
           </div>
         ))}
       </div>
