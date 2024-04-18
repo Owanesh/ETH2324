@@ -1,0 +1,31 @@
+{
+    "user1": [
+      {
+        "question": "What is the capital of France?",
+        "correctAnswer": "Paris"
+      },
+      {
+        "question": "What is 2 + 2?",
+        "correctAnswer": "4"
+      },
+      {
+        "question": "Who wrote Hamlet?",
+        "correctAnswer": "Shakespeare"
+      }
+    ],
+    "user2": [
+      {
+        "question": "What is the capital of Spain?",
+        "correctAnswer": "Madrid"
+      },
+      {
+        "question": "What is 3 * 4?",
+        "correctAnswer": "12"
+      },
+      {
+        "question": "Who painted the Mona Lisa?",
+        "correctAnswer": "Da Vinci"
+      }
+    ]
+  }
+  
