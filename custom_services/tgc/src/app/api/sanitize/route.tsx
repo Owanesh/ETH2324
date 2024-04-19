@@ -22,7 +22,6 @@ export function GET(
   ) {
     return Response.json({ message: 'Hello from Next.js!' })
   }
-//https://secure.booking.com/confirmation.it.html?aid=1192690&label=cuform-city-2024-04-17_09%3A42%3A38-ct_ntab-whotel-vatican_green_garden-wqa1ED3EMKtAL698e-desktop&sid=a0994c8530f943717b25cb03e68f349e&auth_key=9vFgfMl3C8Ysn113&bp_travel_purpose=leisure&hostname=www.booking.com&pre_price=130&rt_num_blocks=6&source=book&ua_created=0&#
 
 export async function PUT(
     req: NextApiRequest,
@@ -34,7 +33,7 @@ export async function PUT(
       if (!body.filename) {
         return Response.json({ error: 'Missing filename parameter'},{ status: randomStatusCode });
       }
-      const command = `echo "${body.filename}" | grep -q -E '\.jpg|\.png' && echo 1 || echo 0`;
+      const command = `echo "${body.filename}" | grep -q -E '\.jpg|\.png|\.webp|\.jpeg|\.avif|\.tiff' && echo 'Is an image' || echo 'Not an image'`;
       try {
         const output = execSync(command).toString().trim();
         return Response.json({ output });
