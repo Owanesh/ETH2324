@@ -1,114 +1,115 @@
 'use client';
-import { Metadata } from 'next';
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 
- 
-
-const ForgotPasswordPage = () => {
-  const [username, setUsername] = useState('');
-  const [questions, setQuestions] = useState([]);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answer, setAnswer] = useState('');
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [success, setSuccess] = useState(false);
-
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await fetch(`/api/questions/${username}`);
-        const data = await response.json();
-        setQuestions(data.questions);
-      } catch (error) {
-        console.error('Error fetching questions:', error);
-        setErrorMessage('Failed to retrieve questions. Please try again later.');
-      }
-    };
-
-    if (username) {
-      fetchQuestions();
-    }
-  }, [username]);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!answer) {
-      setErrorMessage('Please enter an answer to the question.');
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/verify/${username}`, {
-        method: 'POST',
-        body: JSON.stringify({ answer }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccess(true);
-      } else {
-        setErrorMessage('Incorrect answer. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error verifying answer:', error);
-      setErrorMessage('An error occurred. Please try again later.');
-    } finally {
-      setAnswer('');
-    }
-  };
-
-  const handleChangeUsername = (event) => {
+const StepUsername = ({ setUsername, onNext }) => {
+  const handleUsernameChange = (event) => {
     setUsername(event.target.value);
-    setErrorMessage(null);
-    setSuccess(false);
-  };
-
-  const handleChangeAnswer = (event) => {
-    setAnswer(event.target.value);
-    setErrorMessage(null);
   };
 
   return (
-    <div className="flex flex-col justify-center items-center h-screen">
-      <h1 className="text-xl font-bold mb-4">Forgot Password</h1>
-      {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
-      {success && (
-        <div className="text-green-500 mb-4">
-          Your security questions have been answered correctly. You can now reset your password!
-        </div>
-      )}
-      {!success && (
-        <form onSubmit={handleSubmit} className="flex flex-col w-full max-w-sm">
-          <input
-            type="text"
-            placeholder="Username"
-            className="px-3 py-2 mb-4 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={username}
-            onChange={handleChangeUsername}
-            required
-          />
-          {questions.length > 0 && (
-            <>
-              <p className="font-bold mb-2">Security Question:</p>
-              <p>{questions[currentQuestion]}</p>
-              <input
-                type="text"
-                placeholder="Answer"
-                className="px-3 py-2 mb-4 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={answer}
-                onChange={handleChangeAnswer}
-                required
-              />
-              <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                Submit Answer
-              </button>
-            </>
-          )}
-        </form>
-      )}
+    <div className="flex flex-col items-center">
+      <label htmlFor="username" className="text-lg font-semibold mb-4">Step 1: Enter your username</label>
+      <input
+        id="username"
+        type="text"
+        className="w-full border border-gray-300 rounded-md py-2 px-4 text-lg text-gray-700 leading-tight focus:outline-none focus:border-blue-500 mb-4"
+        placeholder="Enter your username"
+        onChange={handleUsernameChange}
+      />
+      <button
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none"
+        onClick={onNext}
+      >
+        Next
+      </button>
     </div>
   );
 };
 
-export default ForgotPasswordPage;
+const StepQuestions = ({ questions, answers, setAnswers, onSubmit }) => {
+  const handleAnswerChange = (index, event) => {
+    const newAnswers = [...answers];
+    newAnswers[index] = event.target.value;
+    setAnswers(newAnswers);
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      <label className="text-lg font-semibold mb-4">Step 2: Answer security questions</label>
+      {questions.map((question, index) => (
+        <div key={index} className="mb-4">
+          <p className="font-semibold text-lg mb-2">{question}</p>
+          <input
+            type="text"
+            className="w-full border border-gray-300 rounded-md py-2 px-4 text-lg text-gray-700 leading-tight focus:outline-none focus:border-blue-500"
+            placeholder="Your answer"
+            value={answers[index] || ''}
+            onChange={(event) => handleAnswerChange(index, event)}
+          />
+        </div>
+      ))}
+      <button
+        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none"
+        onClick={onSubmit}
+      >
+        Submit
+      </button>
+    </div>
+  );
+};
+
+const RecoverPasswordPage = () => {
+  const [username, setUsername] = useState('');
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState([]);
+  const [step, setStep] = useState(1);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const handleNext = () => {
+    const mockQuestions = ['What is your pet\'s name?', 'What is your favorite color?', 'What city were you born in?'];
+    setQuestions(mockQuestions);
+    setStep(step + 1);
+  };
+
+  const handleSubmit = async () => {
+    if (answers.length !== questions.length) {
+      setError('Please answer all questions');
+      return;
+    }
+
+    try {
+      // Mock API response
+      const response = { status: 200, message: 'Password recovery successful. Your new password is sent to your email.' };
+      if (response.status === 200) {
+        setMessage(response.message);
+      } else {
+        setError('Failed to recover password. Please try again later.');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('An unexpected error occurred. Please try again later.');
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8 h-full">
+      <h1 className="text-4xl font-bold mb-8 text-center">Recover Password</h1>
+      {step === 1 && (
+        <StepUsername setUsername={setUsername} onNext={handleNext} />
+      )}
+      {step === 2 && (
+        <StepQuestions
+          questions={questions}
+          answers={answers}
+          setAnswers={setAnswers}
+          onSubmit={handleSubmit}
+        />
+      )}
+      {message && <p className="text-green-600 mt-8">{message}</p>}
+      {error && <p className="text-red-600 mt-8">{error}</p>}
+    </div>
+  );
+};
+
+export default RecoverPasswordPage;
