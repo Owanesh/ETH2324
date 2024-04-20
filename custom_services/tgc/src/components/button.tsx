@@ -1,3 +1,4 @@
+'use client';
 import React from "react";
 
 const Button = ({ children, onClick, className='', variant='' }) => {

@@ -1,5 +1,9 @@
-import Image from "next/image";
+import { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "TGC",
+}
 
 export default function Home() {
   return (
