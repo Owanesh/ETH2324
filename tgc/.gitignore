@@ -1,5 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+tgc/src/app/api/login/data/unsafe_creds.json
 # dependencies
 /node_modules
 /.pnp

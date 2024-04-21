@@ -10,7 +10,7 @@
 
     - name: Copy vsftpd config file
       template:
-        src: ftp/vsftpd.conf
+        src: config/vsftpd.conf
         dest: /etc/vsftpd.conf
 
     - name: Create FTP directory
@@ -42,8 +42,6 @@
         comment: "Allow FTP Passive Mode"
         state: enabled
       loop: "{{ range(40000, 40005)|list }}"
-
-
 
     - name: Start vsftpd service if not already running
       service:
