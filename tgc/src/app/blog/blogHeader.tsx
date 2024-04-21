@@ -74,18 +74,18 @@ const BlogHeader = () => {
               <div className="mt-12 flex justify-center space-x-3">
                 <span className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"><img
                   className="aspect-square h-full w-full" alt="User 1"
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&amp;width=40" /></span><span
+                  src="/imgs/avatars/1.jpg" /></span><span
                     className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"><img
                     className="aspect-square h-full w-full" alt="User 2"
-                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&amp;width=40" /></span><span
+                    src="/imgs/avatars/2.jpg" /></span><span
                       className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"><img
                     className="aspect-square h-full w-full" alt="User 3"
-                    src="https://images.unsplash.com/photo-1548142813-c348350df52b?q=80&w=1889&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&amp;width=40" /></span><span
+                    src="/imgs/avatars/4.jpg" /></span><span
                       className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"><img
                     className="aspect-square h-full w-full" alt="User 4"
-                    src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&w=1889&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&amp;width=40" /></span>
+                    src="/imgs/avatars/5.webp" /></span>
                 <img className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"
-                  src="https://images.unsplash.com/photo-1527718641255-324f8e2d0421?q=80&w=1965&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="/imgs/avatars/3.jpg"
                   alt="5" />
               </div>
             </div>

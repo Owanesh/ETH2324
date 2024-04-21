@@ -31,9 +31,3 @@ export async function POST(
 
 
 }
-
-export function GET(
-    req: NextApiRequest,
-) {
-    return Response.json({ service: "Recover Password" })
-}
