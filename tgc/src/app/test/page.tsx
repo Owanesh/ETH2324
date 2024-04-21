@@ -6,6 +6,7 @@ function Xss() {
 
     const handleSearchChange = (e) => {
         setSearch(e.target.value);
+        console.log(`Search query: ${search}`);
     };
 
     return (

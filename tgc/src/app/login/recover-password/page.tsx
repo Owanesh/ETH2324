@@ -12,12 +12,12 @@ const StepUsername = ({ setUsername, onNext }) => {
       <input
         id="username"
         type="text"
-        className="w-full border border-gray-300 rounded-md py-2 px-4 text-lg text-gray-700 leading-tight focus:outline-none focus:border-blue-500 mb-4"
+        className="w-full border border-gray-300 rounded-md py-2 px-4 text-lg text-gray-700 leading-tight focus:outline-none focus:border-green-500 mb-4"
         placeholder="Enter your username"
         onChange={handleUsernameChange}
       />
       <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none"
+        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded focus:outline-none"
         onClick={onNext}
       >
         Next
@@ -36,20 +36,23 @@ const StepQuestions = ({ questions, answers, setAnswers, onSubmit }) => {
   return (
     <div className="flex flex-col items-center">
       <label className="text-lg font-semibold mb-4">Step 2: Answer security questions</label>
+    <div>
       {questions.map((question, index) => (
         <div key={index} className="mb-4">
-          <p className="font-semibold text-lg mb-2">{question}</p>
+          <p className="font-semibold text-lg mb-2">{question.question}</p>
           <input
             type="text"
-            className="w-full border border-gray-300 rounded-md py-2 px-4 text-lg text-gray-700 leading-tight focus:outline-none focus:border-blue-500"
+            className="w-full border border-gray-300 rounded-md py-2 px-4 text-lg text-gray-700 leading-tight focus:outline-none focus:border-green-500"
             placeholder="Your answer"
             value={answers[index] || ''}
             onChange={(event) => handleAnswerChange(index, event)}
           />
         </div>
       ))}
+    </div>
+
       <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded focus:outline-none"
+        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded focus:outline-none"
         onClick={onSubmit}
       >
         Submit
@@ -66,31 +69,63 @@ const RecoverPasswordPage = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const handleNext = () => {
-    const mockQuestions = ['What is your pet\'s name?', 'What is your favorite color?', 'What city were you born in?'];
-    setQuestions(mockQuestions);
-    setStep(step + 1);
+  const handleNext = async () => {
+    try {
+      const response = await fetch('/api/questions/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch questions');
+      }
+  
+      const data = await response.json();
+      setQuestions(data.questions);
+      setStep(step + 1);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      // Handle error here
+    }
   };
 
   const handleSubmit = async () => {
-    if (answers.length !== questions.length) {
+    if (userAnswers.length !== questions.length) {
       setError('Please answer all questions');
       return;
     }
-
+  
     try {
-      // Mock API response
-      const response = { status: 200, message: 'Password recovery successful. Your new password is sent to your email.' };
-      if (response.status === 200) {
-        setMessage(response.message);
+      const response = await fetch('/api/questions/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          answers: userAnswers.map(answer => answer.trim()), // Remove leading/trailing whitespace
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to validate answers');
+      }
+  
+      const data = await response.json();
+      if (data.valid) {
+        setMessage('Password recovery successful. Your new password is sent to your email.');
       } else {
-        setError('Failed to recover password. Please try again later.');
+        setError('Incorrect answers. Please try again.');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error validating answers:', error);
       setError('An unexpected error occurred. Please try again later.');
     }
   };
+  
 
   return (
     <div className="container mx-auto px-4 py-8 h-full">

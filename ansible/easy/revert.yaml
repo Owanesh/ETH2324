@@ -1,0 +1,24 @@
+---
+- name: Revert system configuration
+  hosts: ubuntu
+  become: yes
+  tasks:
+
+    - name: Remove vsftpd package
+      apt:
+        name: vsftpd
+        state: absent
+
+    - name: Remove FTP directory
+      file:
+        path: /var/ftp/easy
+        state: absent
+
+    - name: Remove hello.txt in /var/ftp/easy
+      file:
+        path: /var/ftp/easy/hello.txt
+        state: absent
+
+    - name: Remove passive mode ports from firewall
+      shell: ufw delete allow from any to any port {{ item }} comment "Allow FTP Passive Mode"
+      loop: "{{ range(40000, 40005)|list }}"
