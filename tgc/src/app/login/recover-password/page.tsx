@@ -128,8 +128,8 @@ const RecoverPasswordPage = () => {
   
 
   return (
-    <div className="container mx-auto px-4 py-8 h-full">
-      <h1 className="text-4xl font-bold mb-8 text-center">Recover Password</h1>
+    <main className="container mx-auto px-4 py-8 h-screen flex flex-col align-center center justify-center">
+      <h1 className="text-4xl font-bold mb-8 text-center">Recover Password</h1> 
       {step === 1 && (
         <StepUsername setUsername={setUsername} onNext={handleNext} />
       )}
@@ -143,7 +143,7 @@ const RecoverPasswordPage = () => {
       )}
       {message && <p className="text-green-600 mt-8">{message}</p>}
       {error && <p className="text-red-600 mt-8">{error}</p>}
-    </div>
+    </main>
   );
 };
 
