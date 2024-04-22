@@ -8,7 +8,7 @@ const BlogStatsCard = () => {
   const [monthlyVisitors, setMonthlyVisitors] = useState(0);
   const [diskCapacity, setDiskCapacity] = useState(0);
   const [bandwidth, setBandwidth] = useState(0);
-  const [bannedWords, setBannedWords] = useState([]);
+  const [bannedWords, setBannedWords] = useState<string[]>([]); // Specify the type as string[]
   const [sharedPosts, setSharedPosts] = useState(0);
 
   // Simulate fetching data (Replace this with actual data fetching logic)

@@ -1,9 +1,8 @@
-import BlogHeader from "./blogHeader";
 import articles from "@/app/blog/data/articles.json"; // Importing the JSON file
 import ArticleCardComponent from "@/components/articleCard"; // Importing Article component
 import ArticleType from "@/app/blog/data/types"; // Importing Article type
 import { Metadata } from "next";
-
+import BlogHeader from "@/components/blogHeader";
 
 export const metadata: Metadata = {
   title: "Blog – TGC",

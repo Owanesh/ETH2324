@@ -6,17 +6,19 @@ const BlogTrafficGraph = () => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
     const pageViews = [500, 1000, 750, 1200, 800, 1500, 1000];
     const uniqueVisitors = [300, 700, 500, 800, 600, 900, 700];
-  
-    // Canvas reference
-    let canvasRef = null;
-  
-    // Function to draw the graph
+    let canvasRef: HTMLCanvasElement | null = null;
+    const setCanvasRef = (ref: HTMLCanvasElement | null) => {
+      canvasRef = ref;
+    };
     const drawGraph = () => {
       const canvas = canvasRef;
-      const ctx = canvas.getContext('2d');
-  
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const ctx = canvasRef?.getContext('2d');
+    
+      if (!canvas || !ctx) {
+        console.error('Canvas or context is not available.');
+        return;
+      }
+      ctx?.clearRect(0, 0, canvas.width, canvas.height);
   
       // Graph parameters
       const barWidth = 40;
@@ -60,7 +62,7 @@ const BlogTrafficGraph = () => {
     return (
       <div className="bg-white dark:bg-stone-900 dark:text-stone-100 p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4">Blog Traffic</h2>
-        <canvas ref={(ref) => (canvasRef = ref)} width={500} height={300}></canvas>
+        <canvas ref={setCanvasRef} width={500} height={300}></canvas>
       </div>
     );
   };

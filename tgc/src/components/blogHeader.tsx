@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import React from 'react';
-
+import Image from 'next/image';
 const BlogHeader = () => {
   return (
     <header>
@@ -72,18 +72,33 @@ const BlogHeader = () => {
                 </div>
               </div>
               <div className="mt-12 flex justify-center space-x-3">
-                <span className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"><img
+                <span className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full">
+                  <Image
                   className="aspect-square h-full w-full" alt="User 1"
-                  src="/imgs/avatars/1.jpg" /></span><span
-                    className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"><img
+                  height={40} width={40}
+                  src="/imgs/avatars/1.jpg" />
+                  </span>
+                  <span
+                    className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full">
+                      <Image
                     className="aspect-square h-full w-full" alt="User 2"
-                    src="/imgs/avatars/2.jpg" /></span><span
-                      className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"><img
+                  height={40} width={40}
+                  src="/imgs/avatars/2.jpg" />
+                    </span>
+                    <span
+                      className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full">
+                        <Image
                     className="aspect-square h-full w-full" alt="User 3"
-                    src="/imgs/avatars/4.jpg" /></span><span
-                      className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"><img
+                  height={40} width={40}
+                  src="/imgs/avatars/4.jpg" />
+                    </span>
+                    <span
+                      className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full">
+                        <Image
                     className="aspect-square h-full w-full" alt="User 4"
-                    src="/imgs/avatars/5.webp" /></span>
+                  height={40} width={40}
+                  src="/imgs/avatars/5.webp" />
+                    </span>
                 <img className="relative flex h-14 w-14 shrink-0 overflow-hidden rounded-full"
                   src="/imgs/avatars/3.jpg"
                   alt="5" />
