@@ -1,0 +1,53 @@
+- name: Revert changes made by privesc playbook
+  hosts: ubuntu
+  become: true
+  tasks:
+    - name: Remove build-essential package
+      become: yes
+      package:
+        name: build-essential
+        state: absent
+
+    - name: Remove gcc-multilib package
+      become: yes
+      package:
+        name: gcc-multilib
+        state: absent
+
+    - name: Remove shadow-butchers-client source code
+      file:
+        path: /home/user/shadow-butchers-client.c
+        state: absent
+
+    - name: Remove shadow-butchers-premium source code
+      file:
+        path: /home/user/shadow-butchers-premium.c
+        state: absent
+
+    - name: Remove Makefile
+      file:
+        path: /home/user/Makefile
+        state: absent
+
+    - name: Clean up compiled binaries [1/2]
+      become: yes
+      file:
+        path: /home/user/shadow-butchers-client
+        state: absent
+        
+    - name: Clean up compiled binaries [2/2]
+      become: yes
+      file:
+        path: /home/user/shadow-butchers-premium.so
+        state: absent
+
+    - name: Re-enable ASLR if it was previously disabled
+      sysctl:
+        name: kernel.randomize_va_space
+        value: 2
+        state: present
+
+    - name: Remove exploit.py file
+      file:
+        path: /home/nicholas/exploit.py
+        state: absent
