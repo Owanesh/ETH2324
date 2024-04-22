@@ -3,7 +3,6 @@ import React, { useState } from "react";
 
 function Xss() {
     const [search, setSearch] = useState("");
-
     const handleSearchChange = (e) => {
         setSearch(e.target.value);
         console.log(`Search query: ${search}`);

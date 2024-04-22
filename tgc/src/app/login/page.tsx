@@ -22,13 +22,14 @@ function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    // encode password in base64
+    const passwordEncoded = Buffer.from(password).toString('base64');
     const response = await fetch('/api/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password } as User),
+      body: JSON.stringify({ email, password:passwordEncoded } as User),
     });
     const data = await response.json();
 
