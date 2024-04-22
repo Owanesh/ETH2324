@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Metadata } from "next";
 
 
- 
- 
+
+
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -29,7 +29,7 @@ function Login() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password:passwordEncoded } as User),
+      body: JSON.stringify({ email, password: passwordEncoded } as User),
     });
     const data = await response.json();
 
@@ -50,14 +50,14 @@ function Login() {
             Sign in to your account
           </h2>
         </div>
-        {error &&  
+        {error &&
 
-        <div className="flex align-center center justify-center items-center mb-4">
-  <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
-  {error}
-  </span>
-</div>
-}
+          <div className="flex align-center center justify-center items-center mb-4">
+            <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+              {error}
+            </span>
+          </div>
+        }
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <input type="hidden" name="remember" value="true" />
           <div className="rounded-md shadow-sm -space-y-px">
