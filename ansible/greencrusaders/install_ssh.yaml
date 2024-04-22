@@ -1,0 +1,27 @@
+---
+- name: Copy SSH key and enable SSH authentication
+  hosts: ubuntu
+  become: yes
+  tasks:
+    - name: Copy SSH key to remote host
+      ansible.builtin.copy:
+        src: ./ssh/id_rsa.pub
+        dest: /home/{{ remote_username }}/.ssh/authorized_keys
+        owner: "{{ remote_username }}"
+        group: "{{ remote_username }}"
+        mode: '0600'
+
+    - name: Ensure .ssh directory exists
+      ansible.builtin.file:
+        path: /home/{{ remote_username }}/.ssh
+        state: directory
+        owner: "{{ remote_username }}"
+        group: "{{ remote_username }}"
+        mode: '0700'
+
+    - name: Ensure correct permissions on authorized_keys
+      ansible.builtin.file:
+        path: /home/{{ remote_username }}/.ssh/authorized_keys
+        owner: "{{ remote_username }}"
+        group: "{{ remote_username }}"
+        mode: '0600'
