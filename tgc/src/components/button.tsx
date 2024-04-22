@@ -1,7 +1,14 @@
 'use client';
 import React from "react";
 
-const Button = ({ children, onClick, className='', variant='' }) => {
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  className?: string;
+  variant?: string;
+}
+
+const Button: React.FC<ButtonProps> = ({ children, onClick, className = '', variant = '' }) => {
   let buttonClasses = "font-bold py-2 px-4 rounded ";
 
   switch (variant) {

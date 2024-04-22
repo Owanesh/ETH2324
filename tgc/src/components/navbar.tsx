@@ -15,12 +15,12 @@ const Navbar = () => {
                         <li>
                             <Link href="/manifesto" className="hover:text-gray-300">Manifesto</Link>
                         </li>
-                       
+
                     </ul>
                 </nav>
-                <div className="">  
-                            <Link href="/login" className="hover:text-gray-300">Login</Link>
-                        </div>
+                <div className="">
+                    <Link href="/login" className="hover:text-gray-300">Login</Link>
+                </div>
 
             </div>
         </header>

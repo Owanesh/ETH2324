@@ -31,7 +31,6 @@ const ActiveUsersCard = () => {
         setUsers(data.users ?? []); // Initialize users as an empty array if undefined
         setLoading(false);
       } catch (error) {
-        setError(error.message);
         setLoading(false);
       }
     };

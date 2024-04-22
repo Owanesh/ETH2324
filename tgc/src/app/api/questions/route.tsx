@@ -11,22 +11,18 @@ interface UserQuestions {
     [username: string]: Question[];
 }
 
-export async function POST(
-    req: NextApiRequest,
-) {
+export async function POST(req: Request) {
     const body = await req.json();
     const { username } = body
-    const userQuestions = questionsData[username] as UserQuestions;
+    const userQuestions = (questionsData as UserQuestions)[username] as Question[]; 
 
     if (!userQuestions) { // this if will never be triggered
         return Response.json({ error: 'Username n0t found!' }, { status: 400 });
     }
-    for (let key in userQuestions) {
-        if (userQuestions.hasOwnProperty(key)) {
-            delete userQuestions[key].correctAnswer;
-        }
-    }
-    const questionsToSend = userQuestions.slice(0, 3);
+    const questionsToSend = userQuestions.map(question => ({
+        question: question.question
+    })).slice(0, 3);
+    
     return Response.json({ username: username, questions: questionsToSend })
 
 

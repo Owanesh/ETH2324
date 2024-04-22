@@ -1,8 +1,13 @@
 'use client';
-import { useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 
-const StepUsername = ({ setUsername, onNext }) => {
-  const handleUsernameChange = (event) => {
+interface StepUsernameProps {
+  setUsername: (username: string) => void;
+  onNext: () => void;
+}
+
+const StepUsername: React.FC<StepUsernameProps> = ({ setUsername, onNext }) => {
+    const handleUsernameChange = (event: { target: { value: string; }; }) => {
     setUsername(event.target.value);
   };
 
@@ -26,8 +31,20 @@ const StepUsername = ({ setUsername, onNext }) => {
   );
 };
 
-const StepQuestions = ({ questions, answers, setAnswers, onSubmit }) => {
-  const handleAnswerChange = (index, event) => {
+interface Question {
+  question: string;
+  correctAnswer: string;
+}
+
+interface StepQuestionsProps {
+  questions: Question[];
+  answers: string[];
+  setAnswers: (answers: string[]) => void;
+  onSubmit: () => void;
+}
+
+const StepQuestions: React.FC<StepQuestionsProps> = ({ questions, answers, setAnswers, onSubmit }) => {
+  const handleAnswerChange = (index: number, event: ChangeEvent<HTMLInputElement>) => {
     const newAnswers = [...answers];
     newAnswers[index] = event.target.value;
     setAnswers(newAnswers);
@@ -64,7 +81,7 @@ const StepQuestions = ({ questions, answers, setAnswers, onSubmit }) => {
 const RecoverPasswordPage = () => {
   const [username, setUsername] = useState('');
   const [questions, setQuestions] = useState([]);
-  const [answers, setAnswers] = useState([]);
+  const [answers, setAnswers] = useState<string[]>([]); // Specify the type as string[]
   const [step, setStep] = useState(1);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -93,7 +110,7 @@ const RecoverPasswordPage = () => {
   };
 
   const handleSubmit = async () => {
-    if (userAnswers.length !== questions.length) {
+    if (answers.length !== questions.length) {
       setError('Please answer all questions');
       return;
     }
@@ -106,7 +123,7 @@ const RecoverPasswordPage = () => {
         },
         body: JSON.stringify({
           username,
-          answers: userAnswers.map(answer => answer.trim()), // Remove leading/trailing whitespace
+          answers: answers.map(answer => answer.trim()), // Remove leading/trailing whitespace
         }),
       });
   

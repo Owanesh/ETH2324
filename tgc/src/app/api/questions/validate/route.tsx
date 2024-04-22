@@ -1,7 +1,6 @@
 // pages/api/questions.js
 import questionsData from "@/app/api/questions/data/questions.json";
 import creds from "@/app/api/login/data/credentials.json";
-import type { NextApiRequest } from 'next'
 
 interface Question {
     question: string;
@@ -12,9 +11,7 @@ interface UserQuestions {
     [username: string]: Question[];
 }
 
-export async function POST(
-    req: NextApiRequest,
-) {
+export async function POST(req: Request) {
   
     const body = await req.json();
     const { username, answers } = body
@@ -24,7 +21,7 @@ export async function POST(
     if (!answers) {
         return Response.json({ error: 'Answers are required' }, { status: 400 });
     }
-    const questions = questionsData[username] as UserQuestions;
+    const questions = (questionsData as UserQuestions)[username] as Question[]; 
     if (!questions) {
         return Response.json({ error: 'Username not found!' }, { status: 400 });
     }
@@ -32,8 +29,7 @@ export async function POST(
         return Response.json({ error: 'Invalid number of answers' }, { status: 400 });
     }
     const correctAnswers: string[] = questions.map(question => question.correctAnswer);
-    const isCorrect = answers.every((answer, index) => sanitizeInput(answer) === correctAnswers[index]);
-
+    const isCorrect = answers.every((answer: string, index: number) => sanitizeInput(answer) === correctAnswers[index]);
     if (!isCorrect) {
         return Response.json({ error: 'Incorrect answers' }, { status: 400 });
     }
