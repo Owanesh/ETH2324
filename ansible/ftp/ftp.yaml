@@ -28,12 +28,9 @@
         state: restarted
         
     - name: Place file for download
-      copy:
-        content: "This is a sample file for download."
-        dest: /var/ftp/easy/leavemehere.txt
-        owner: nobody
-        group: nogroup
-        mode: '0644'
+      template:
+        src: sql_backup.zip
+        dest: /var/ftp/easy/sql_backup.zip
 
     - name: Open passive mode ports in firewall
       ufw:
