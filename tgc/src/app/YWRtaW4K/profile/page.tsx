@@ -1,15 +1,33 @@
+
 import { Metadata } from "next";
 import MemberPage from '@/components/admin/memberProfilePage';
+import { cookies } from "next/headers";
+import { decryptData } from "@/app/crypto";
+import AuthorProfile from "@/components/admin/authorProfilePage";
 
-
+import { redirect } from 'next/navigation'
 export const metadata: Metadata = {
     title: "Profile – TGC",
 }
 
+
 export default function Profile() {
 
+    let datas = undefined;
+    try {
+        const userDataCookie = cookies().get("userData")?.value || "";
+        datas = decryptData(userDataCookie);
+    } catch (error) {
+        redirect('/login')
+    }
 
     return (
-<MemberPage></MemberPage>
-    );
+        <main className="bg-stone-100 dark:text-stone-100 dark:bg-stone-900 ">
+            {datas?.role === "member" && (
+                <MemberPage></MemberPage>
+            )}
+            {datas?.role === "author" && (
+                <AuthorProfile data={datas}></AuthorProfile>
+            )}
+        </main>);
 }

@@ -1,7 +1,13 @@
+import { decryptData } from '@/app/crypto';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import React from 'react';
 
 const Navbar = () => {
+    let datas = undefined;
+    try{
+    datas = decryptData(cookies().get("userData")?.value || "");
+    }catch(e){}
     return (
         <header className="bg-stone-800 dark:bg-stone-600 text-white shadow-md">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -19,7 +25,19 @@ const Navbar = () => {
                     </ul>
                 </nav>
                 <div className="">
-                    <Link href="/login" className="hover:text-gray-300">Login</Link>
+                    {datas && (
+                        <>
+                        <span>Welcome <Link href="/YWRtaW4K/profile" className="hover:text-gray-300">{datas.username} ❤️</Link> </span>
+                        
+                        </>
+                    
+                    )}
+                     {datas && datas.role === "author" && (
+                           <><span>&nbsp;|&nbsp;</span> <span><Link href="/YWRtaW4K/new-article" className="hover:text-gray-300">New post ✏️</Link></span></>
+                        )
+                        }
+                    {!datas && (<Link href="/login" className="hover:text-gray-300">Login</Link>
+                )}
                 </div>
 
             </div>

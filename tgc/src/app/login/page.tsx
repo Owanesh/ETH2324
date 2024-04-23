@@ -2,11 +2,6 @@
 import React, { useState } from "react";
 import { User } from "../api/login/data/types";
 import Link from "next/link";
-import { Metadata } from "next";
-
-
-
-
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -34,7 +29,7 @@ function Login() {
     const data = await response.json();
 
     if (response.ok) {
-      console.log(data.message);
+      window.location.href= '/YWRtaW4K/profile'; // Replace '/YYY/page' with the desired URL
     } else {
       setError(data.message);
     }

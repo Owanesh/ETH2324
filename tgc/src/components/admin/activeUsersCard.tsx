@@ -63,7 +63,7 @@ const ActiveUsersCard = () => {
     return (
       <ul className="overflow-y-auto max-h-80">
         {users.map((user, index) => (
-          <li key={index} className="border-b border-gray-200 py-2">
+          <li key={index} className="border-b border-gray-200 py-2 text-gray-700">
             {user}
           </li>
         ))}
