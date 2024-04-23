@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             await page.goto("http://localhost:3000/YWRtaW4K/32721884973979946471658112221257", { waitUntil: 'networkidle0' });
             await page.setCookie({
                 name: 'admin',
-                value: 's3cr3t',
+                value: 'you-are-my-',
                 domain: 'localhost',
                 path: '/',
                 expires: Math.floor(Date.now() / 1000) + 3600,

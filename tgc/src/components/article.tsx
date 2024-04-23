@@ -23,7 +23,7 @@ export default function ArticleComponent({ article }: { article: ArticleType }) 
                     <div className="max-w-4xl mx-auto text-center">
                         <h1 className="text-4xl md:text-6xl font-bold mb-4">{article.title}</h1>
                         <p className="text-lg mb-8">{article.description}</p>
-                        <p className="text-sm">Written by {article.author} on {article.date} </p>
+                        <p className="text-sm">Written by <Link href={`/blog/author/${article.nickname}`}>{article.author}</Link> on {article.date} </p>
                         {article.tags.map((tag, index) => (
                             <span key={index} className="inline-block bg-blue-800 dark:bg-pink-500 text-white px-3 py-1 rounded-full text-sm font-semibold mr-2 mb-2">{tag}</span>
                         ))}
