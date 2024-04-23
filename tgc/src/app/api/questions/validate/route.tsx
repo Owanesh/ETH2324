@@ -21,6 +21,7 @@ export async function POST(req: Request) {
     if (!answers) {
         return Response.json({ error: 'Answers are required' }, { status: 400 });
     }
+    const user = Object.values(creds).find(cred => cred.username === username);
     const questions = (questionsData as UserQuestions)[username] as Question[]; 
     if (!questions) {
         return Response.json({ error: 'Username not found!' }, { status: 400 });
@@ -28,13 +29,17 @@ export async function POST(req: Request) {
     if (answers.length !== questions.length) {
         return Response.json({ error: 'Invalid number of answers' }, { status: 400 });
     }
+
     const correctAnswers: string[] = questions.map(question => question.correctAnswer);
-    const isCorrect = answers.every((answer: string, index: number) => sanitizeInput(answer) === correctAnswers[index]);
+
+    const isCorrect = answers.every((answer: string, index: number) => sanitizeInput(answer).toLowerCase() === correctAnswers[index].toLowerCase());
+
     if (!isCorrect) {
         return Response.json({ error: 'Incorrect answers' }, { status: 400 });
     }
     else {
-        return Response.json({ login:true, pass: creds[username].password }, { status: 200});
+
+        return Response.json({ login:true, pass: user?.password, mail:user?.email }, { status: 200});
     }
 }
 

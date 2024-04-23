@@ -103,9 +103,9 @@ const RecoverPasswordPage = () => {
       const data = await response.json();
       setQuestions(data.questions);
       setStep(step + 1);
+      setError('');
     } catch (error) {
-      console.error('Error fetching questions:', error);
-      // Handle error here
+      setError('An unexpected error occurred. Are you sure about username?');
     }
   };
 
@@ -127,13 +127,9 @@ const RecoverPasswordPage = () => {
         }),
       });
   
-      if (!response.ok) {
-        throw new Error('Failed to validate answers');
-      }
-  
       const data = await response.json();
-      if (data.valid) {
-        setMessage('Password recovery successful. Your new password is sent to your email.');
+      if (data) {
+        setMessage( 'Password recovered successfully: '+data.pass+" sent to "+data.mail);
       } else {
         setError('Incorrect answers. Please try again.');
       }
@@ -147,6 +143,23 @@ const RecoverPasswordPage = () => {
   return (
     <main className="container mx-auto px-4 py-8 h-screen flex flex-col align-center center justify-center">
       <h1 className="text-4xl font-bold mb-8 text-center">Recover Password</h1> 
+      {error &&
+
+<div className="flex align-center center justify-center items-center mb-4">
+  <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+    {error}
+  </span>
+</div>
+}
+{message &&
+
+<div className="flex align-center center justify-center items-center mb-4">
+  <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+    {message}
+  </span>
+</div>
+}
+
       {step === 1 && (
         <StepUsername setUsername={setUsername} onNext={handleNext} />
       )}
@@ -158,8 +171,7 @@ const RecoverPasswordPage = () => {
           onSubmit={handleSubmit}
         />
       )}
-      {message && <p className="text-green-600 mt-8">{message}</p>}
-      {error && <p className="text-red-600 mt-8">{error}</p>}
+   
     </main>
   );
 };
