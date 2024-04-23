@@ -1,5 +1,5 @@
 ---
-- name: Install NVM, PM2, Nginx, and deploy project
+- name: Install NVM, PM2, Nginx
   hosts: ubuntu
   become: yes
   tasks:
