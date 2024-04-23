@@ -1,6 +1,9 @@
 import { User } from './data/types';
-import crypto from 'crypto';
+import crypto, { randomInt } from 'crypto';
 import credentials from "@/app/api/login/data/credentials.json";
+import { cookies } from "next/headers";
+import { encryptData } from '@/app/crypto';
+
 
 export async function POST(req: Request) {    try {
         const body = await req.json() as User;
@@ -9,9 +12,10 @@ export async function POST(req: Request) {    try {
         const hashedPassword = crypto.createHash('sha256').update(decodedPassword).digest('hex');
         const user = credentials.find((user: User) => user.email === email && user.password === hashedPassword);
         if (user) {
-            const userInfo = JSON.stringify({ role: user.role, nickname: user.nickname });
-            const hashedUserInfo = crypto.createHash('sha256').update(userInfo).digest('hex');
-            return Response.json({ message: 'Login successful', timestamp:Date.now(), cookie:hashedUserInfo }, { status: 200 });
+            const userInfo = encryptData(JSON.stringify(user));
+
+            cookies().set("userData",userInfo, {httpOnly:false,secure:false});
+            return Response.json({ message: 'Login successful', timestamp:Date.now() }, { status: 200 });
         } else {
             return Response.json({ message: 'Invalid email or password', timestamp:Date.now() }, { status: 401 }); 
         }
@@ -19,3 +23,6 @@ export async function POST(req: Request) {    try {
         return Response.json({ message: 'Internal Server Error', timestamp:Date.now(), response: 42, error:error }, { status: 500 }); 
     }
 }
+
+
+ 
