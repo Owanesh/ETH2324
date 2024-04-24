@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
 
         return Response.json({ title: body.title, content: body.content, tags: body.tags }, { status: 200 });
-    } catch (error) {
+    } catch (error: any) {
         console.error('An error occurred:', error.message);
         return Response.json({ error: error.message }, { status: 400 });
     }

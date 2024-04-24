@@ -5,9 +5,9 @@ export default function PostArticle() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
-  const [submittedData, setSubmittedData] = useState(null);
+  const [submittedData, setSubmittedData] = useState<{ title: string, content: string, tags: string }>({ title: '', content: '', tags: '' });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     // Store the submitted data
     setSubmittedData({ title, content, tags });
