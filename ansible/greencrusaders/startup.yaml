@@ -8,7 +8,6 @@
         cmd: "pm2 delete all -f"
       args:
         chdir: "/var/www/{{ project_lbl }}"
-      become: yes
       ignore_errors: yes
 
 
@@ -17,14 +16,12 @@
         cmd: "pm2 start npm -- start"
       args:
         chdir: "/var/www/{{ project_lbl }}"
-      become: yes
 
     - name: Save PM2 process list
       shell:
         cmd: "pm2 save"
       args:
         chdir: "/var/www/{{ project_lbl }}"
-      become: yes
 
 
    
