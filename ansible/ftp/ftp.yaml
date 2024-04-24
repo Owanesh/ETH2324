@@ -40,6 +40,17 @@
         state: enabled
       loop: "{{ range(40000, 40005)|list }}"
 
+    - name: Allow all access to tcp port 21
+      ufw:
+        rule: allow
+        port: '21'
+        proto: tcp
+
+    - name: Allow all access to tcp port 22
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
     - name: Start vsftpd service if not already running
       service:
         name: vsftpd

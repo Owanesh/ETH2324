@@ -1,0 +1,51 @@
+- name: Start PM2 process and set to start on boot
+  hosts: ubuntu
+  become: yes
+  tasks:
+
+    - name: Delete previous pm2 processes
+      shell:
+        cmd: "pm2 delete all -f"
+      args:
+        chdir: "/var/www/{{ project_lbl }}"
+      become: yes
+      ignore_errors: yes
+
+
+    - name: Start PM2 process
+      shell:
+        cmd: "pm2 start npm -- start"
+      args:
+        chdir: "/var/www/{{ project_lbl }}"
+      become: yes
+
+    - name: Save PM2 process list
+      shell:
+        cmd: "pm2 save"
+      args:
+        chdir: "/var/www/{{ project_lbl }}"
+      become: yes
+
+
+   
+    - name: Execute PM2 startup script
+      become: true
+      command: pm2 startup systemd -u {{ remote_username }} --hp /home/{{ remote_username }}
+      environment:
+        PATH: "{{ ansible_env.PATH }}"
+
+
+    - name: Save PM2 process list after generating startup script
+      shell:
+        cmd: "pm2 save"
+      become_user: "{{ remote_username }}"
+      become_method: sudo
+
+    - name: Check Nginx configuration
+      command: "nginx -t"
+      ignore_errors: yes
+
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded

@@ -16,29 +16,29 @@
 
     - name: Remove shadow-butchers-client source code
       file:
-        path: /home/user/shadow-butchers-client.c
+        path: /home/{{remote_username}}/shadow-butchers-client.c
         state: absent
 
     - name: Remove shadow-butchers-premium source code
       file:
-        path: /home/user/shadow-butchers-premium.c
+        path: /home/{{remote_username}}/shadow-butchers-premium.c
         state: absent
 
     - name: Remove Makefile
       file:
-        path: /home/user/Makefile
+        path: /home/{{remote_username}}/Makefile
         state: absent
 
     - name: Clean up compiled binaries [1/2]
       become: yes
       file:
-        path: /home/user/shadow-butchers-client
+        path: /home/{{remote_username}}/shadow-butchers-client
         state: absent
         
     - name: Clean up compiled binaries [2/2]
       become: yes
       file:
-        path: /home/user/shadow-butchers-premium.so
+        path: /home/{{remote_username}}/shadow-butchers-premium.so
         state: absent
 
     - name: Re-enable ASLR if it was previously disabled

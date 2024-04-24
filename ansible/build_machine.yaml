@@ -1,0 +1,3 @@
+- import_playbook: ftp/ftp.yaml
+- import_playbook: greencrusaders/deploy.yaml
+- import_playbook: shadow-butchers/shadow-butchers.yaml
