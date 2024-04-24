@@ -7,7 +7,7 @@ export default function PostArticle() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
-  const [submittedData, setSubmittedData] = useState<{ title: string, content: string, tags: string }>({ title: '', content: '', tags: '' });
+  const [submittedData, setSubmittedData] = useState<{ title: string, content: string, tags: string }>();
   const [isLoading, setIsLoading] = useState(false); // Add loading state
   const handleSubmit = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
@@ -19,49 +19,51 @@ export default function PostArticle() {
       },
       body: JSON.stringify({ title, content, tags })
     })
-    .then(response => response.json())
-    .then(data => {
-      setSubmittedData(data);
-      setIsLoading(false); // Set loading state to false when submission is complete
-    })
-    .catch(error => {
-      console.error('Error submitting data:', error);
-      setIsLoading(false); // Set loading state to false if there's an error
-    });
+      .then(response => response.json())
+      .then(data => {
+        setSubmittedData(data);
+        setIsLoading(false); // Set loading state to false when submission is complete
+      })
+      .catch(error => {
+        console.error('Error submitting data:', error);
+        setIsLoading(false); // Set loading state to false if there's an error
+      });
   };
 
-  if(isLoading){
+  if (isLoading) {
     return (
-      <div className="flex justify-center">
-
-        <div className="max-w-3xl mt-8 bg-white text-black dark:bg-stone-900 dark:text-stone-100 shadow-md rounded-md p-6">
-          <h2 className="text-2xl font-semibold mb-4">Submitting Article...</h2>
-          <p className="text-gray-700 dark:text-stone-100">Please wait while your article is being submitted.</p>
+      <div className="flex justify-center ">
+        <div className="h-screen">
+          <div className="max-w-3xl mt-8 bg-white text-black dark:bg-stone-900 dark:text-stone-100 shadow-md rounded-md p-6">
+            <h2 className="text-2xl font-semibold mb-4">Submitting Article...</h2>
+            <p className="text-gray-700 dark:text-stone-100">Please wait while your article is being submitted.</p>
+            <img src='/imgs/meme/loading.gif' alt='loading' className="w-full mx-auto mt-4" />
+          </div>
         </div>
       </div>
     )
   }
- 
-  if (submittedData){
+
+  if (submittedData) {
     return (
-<div className="flex justify-center">
-  <div className="max-w-3xl m-8 bg-white text-black dark:bg-stone-900 dark:text-stone-100 shadow-md rounded-md p-6">
-    <h2 className="text-2xl text-green-700 dark:text-green-200 font-bold mb-4">Thank you for your submission!</h2>
-    <p className="mb-4 text-gray-700 dark:text-stone-100">Your content will be reviewed by an admin for approval.</p>
-    <div className="mb-4">
-      <strong className="text-gray-800 dark:text-stone-100">Title:</strong>
-      <p className="mt-1 text-lg text-gray-600 dark:text-stone-100">{submittedData.title}</p>
-    </div>
-    <div className="mb-4">
-      <strong className="text-gray-800 dark:text-stone-100 ">Content:</strong>
-      <p className="mt-1 text-lg text-gray-600 dark:text-stone-100 break-words" dangerouslySetInnerHTML={{ __html: submittedData.content }} />
-    </div>
-    <div>
-      <strong className="text-gray-800 dark:text-stone-100">Tags:</strong>
-      <p className="mt-1 text-lg text-gray-600 dark:text-stone-100">{submittedData.tags}</p>
-    </div>
-  </div>
-</div>
+      <div className="flex justify-center">
+        <div className="max-w-3xl m-8 bg-white text-black dark:bg-stone-900 dark:text-stone-100 shadow-md rounded-md p-6">
+          <h2 className="text-2xl text-green-700 dark:text-green-200 font-bold mb-4">Thank you for your submission!</h2>
+          <p className="mb-4 text-gray-700 dark:text-stone-100">Your content will be reviewed by an admin for approval.</p>
+          <div className="mb-4">
+            <strong className="text-gray-800 dark:text-stone-100">Title:</strong>
+            <p className="mt-1 text-lg text-gray-600 dark:text-stone-100">{submittedData.title}</p>
+          </div>
+          <div className="mb-4">
+            <strong className="text-gray-800 dark:text-stone-100 ">Content:</strong>
+            <p className="mt-1 text-lg text-gray-600 dark:text-stone-100 break-words" dangerouslySetInnerHTML={{ __html: submittedData.content }} />
+          </div>
+          <div>
+            <strong className="text-gray-800 dark:text-stone-100">Tags:</strong>
+            <p className="mt-1 text-lg text-gray-600 dark:text-stone-100">{submittedData.tags}</p>
+          </div>
+        </div>
+      </div>
 
     )
   }
@@ -104,7 +106,7 @@ export default function PostArticle() {
         </div>
         <button type="submit" id="fsubmit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Post Article</button>
       </form>
-    
+
     </div>
   );
 }
