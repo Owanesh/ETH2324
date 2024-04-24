@@ -28,7 +28,7 @@
         state: restarted
         
     - name: Place file for download
-      template:
+      copy:
         src: sql_backup.zip
         dest: /var/ftp/easy/sql_backup.zip
 
