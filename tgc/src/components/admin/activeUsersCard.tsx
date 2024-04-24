@@ -63,7 +63,7 @@ const ActiveUsersCard = () => {
     return (
       <ul className="overflow-y-auto max-h-80">
         {users.map((user, index) => (
-          <li key={index} className="border-b border-gray-200 py-2 text-gray-700">
+          <li key={index} className="border-b border-stone-200 py-2 text-stone-700  dark:text-stone-200">
             {user}
           </li>
         ))}
@@ -73,19 +73,19 @@ const ActiveUsersCard = () => {
 
   return (
     <div className="container mx-auto">
-      <h1 className="text-3xl font-bold my-8">Active Users List</h1>
-      <div className="bg-white rounded-lg shadow-md p-4">
+      <h1 className="text-3xl font-bold my-8  dark:text-stone-200">Active Users List</h1>
+      <div className="bg-white dark:bg-stone-800   dark:text-stone-200 rounded-lg shadow-md p-4">
         <div className="relative mb-4">
           <input
             type="text"
             value={searchTerm}
             onChange={handleSearchChange}
             placeholder="Search user..."
-            className="w-full py-2 px-4 rounded-md shadow-md focus:outline-none focus:ring focus:border-blue-300 pr-10"
+            className="w-full py-2 px-4 rounded-md shadow-md dark:bg-stone-800   dark:text-stone-200  focus:outline-none focus:ring focus:border-blue-300 pr-10 text-stone-200 "
           />
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-400"
+            className="h-6 w-6 absolute top-1/2 right-4 transform -translate-y-1/2 text-stone-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
