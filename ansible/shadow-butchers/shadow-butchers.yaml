@@ -18,21 +18,21 @@
     - name: Copy shadow-butchers-client source code
       template:
         src: ../../shadow-butchers/src/shadow-butchers-client.c
-        dest: /home/user/shadow-butchers-client.c
+        dest: /home/{{remote_username}}/shadow-butchers-client.c
 
     - name: Copy shadow-butchers-premium source code
       template:
         src: ../../shadow-butchers/src/shadow-butchers-premium.c
-        dest: /home/user/shadow-butchers-premium.c
+        dest: /home/{{remote_username}}/shadow-butchers-premium.c
 
     - name: Copy Makefile
       template:
         src: ../../shadow-butchers/src/Makefile
-        dest: /home/user/Makefile
+        dest: /home/{{remote_username}}/Makefile
 
     - name: Run make to compile
       become: yes
-      command: make -C /home/user/
+      command: make -C /home/{{remote_username}}/
 
     - name: Check if ASLR is already disabled
       shell: cat /proc/sys/kernel/randomize_va_space
@@ -57,34 +57,34 @@
 
     - name: Set SETUID bit
       become: yes
-      shell: chmod +s /home/user/shadow-butchers-client
+      shell: chmod +s /home/{{remote_username}}/shadow-butchers-client
 
     - name: Change owner of the file
       become: yes
       file:
-        path: /home/user/shadow-butchers-client
+        path: /home/{{remote_username}}/shadow-butchers-client
         owner: root
         group: root
 
     - name: Delete shadow-butchers-client.c
       ansible.builtin.file:
-        path: /home/user/shadow-butchers-client.c
+        path: /home/{{remote_username}}/shadow-butchers-client.c
         state: absent
 
     - name: Delete shadow-butchers-premium.c
       ansible.builtin.file:
-        path: /home/user/shadow-butchers-premium.c
+        path: /home/{{remote_username}}/shadow-butchers-premium.c
         state: absent
 
     - name: Delete Makefile
       ansible.builtin.file:
-        path: /home/user/Makefile
+        path: /home/{{remote_username}}/Makefile
         state: absent
 
     # COMMENT THIS WHEN BUILDING FINAL MACHINE
     - name: Copy file exploit for testing exploit
       template:
         src: ../../shadow-butchers/exploit/exploit.py
-        dest: /home/user/exploit.py
+        dest: /home/{{remote_username}}/exploit.py
 
 

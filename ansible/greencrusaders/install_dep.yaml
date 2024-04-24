@@ -17,43 +17,21 @@
         - python3-pip
         - nginx
 
-    - name: Create NVM destination directory
-      ansible.builtin.file:
-        path: /home/user/tools/
-        state: directory
-        owner: user
-
-    - name: Load NVM script
-      become_user: user
-      copy:
-        src: ./tools/nvm.sh
-        dest: /home/user/tools/nvm.sh
-      
-    - name: Execute NVM script
-      become_user: user
-      shell: bash /home/user/tools/nvm.sh
-
-    - name: Install Node.js using NVM
-      become_user: user
-      shell: |
-        export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-        nvm install node
-
-    - name: Install PM2 globally
-      become_user: user
-      shell: >
-        bash -c 'source ~/.nvm/nvm.sh && nvm use node && npm install -g pm2 --force'
-
-
-    - name: Install Node.js and npm
-      become: yes
+    - name: Update apt cache
       apt:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - nodejs
-        - npm
+        update_cache: yes
+
+    - name: Execute Node script
+      shell:
+        cmd: curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+    
+    - name: Install Node.js and npm
+      shell: sudo apt-get install -y nodejs
+
+    - name: Install PM2 globally using npm
+      npm:
+        name: pm2
+        global: yes
 
     - name: Configure Nginx
       become: yes
@@ -70,9 +48,31 @@
         dest: /etc/nginx/sites-enabled/{{project_name}}
         state: link
 
+    - name: Remove default Nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Remove default Nginx site
+      file:
+        path: /etc/nginx/sites-available/default
+        state: absent
+    - name: Remove default Nginx folder
+      file:
+        path: /var/www/html
+        state: absent
+
+    - name: Allow all access to tcp port 80
+      ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+        
   handlers:
     - name: Reload Nginx
       become: yes
       service:
         name: nginx
         state: reloaded
+
+ 

@@ -1,0 +1,40 @@
+---
+- name: Build the application
+  hosts: ubuntu
+  become: yes
+  gather_facts: no
+  ignore_errors: yes
+  tasks:
+
+    - name: Copy project files
+      become: yes
+      ansible.builtin.copy:
+        src: ./{{project_lbl}}.zip
+        dest: /var/www/
+
+    - name: Check if unzip is installed
+      ansible.builtin.command: "which unzip"
+      register: unzip_check
+      ignore_errors: true
+
+    - name: Install unzip if not present
+      ansible.builtin.package:
+        name: unzip
+        state: present
+      when: unzip_check.rc != 0
+
+    - name: Create destination directory
+      ansible.builtin.file:
+        path: /var/www/{{project_lbl}}/
+        state: directory
+        mode: '0755'
+
+    - name: Unzip the file using unzip command
+      ansible.builtin.shell:
+        cmd: "unzip -o /var/www/{{ project_lbl }}.zip -d /var/www/{{project_lbl}}/"
+
+    - name: Remove tgc.zip file
+      ansible.builtin.file:
+        path: /var/www/{{project_lbl}}.zip
+        state: absent
+      ignore_errors: yes

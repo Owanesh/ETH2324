@@ -1,0 +1,14 @@
+---
+- name: Master Deployment Foothold Playbook
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Compress the project directory
+      become: yes
+      archive:
+        path: ../../tgc/
+        dest: ./tgc.zip
+        format: zip
+
+        

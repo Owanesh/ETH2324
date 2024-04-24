@@ -1,49 +1,10 @@
 ---
-- name: Master Deployment Foothold Playbook
-  hosts: localhost
-  connection: local
-  gather_facts: false
-  tasks:
-    - name: Compress the project directory
-      become: yes
-      archive:
-        path: ../../tgc/
-        dest: ./tgc.zip
-        format: zip
-        
-
 - name: Build the application
   hosts: ubuntu
   become: yes
   gather_facts: no
   ignore_errors: yes
   tasks:
-
-    - name: Copy project files
-      become: yes
-      ansible.builtin.copy:
-        src: ./{{project_lbl}}.zip
-        dest: /var/www/
-
-    - name: Check if unzip is installed
-      ansible.builtin.command: "which unzip"
-      register: unzip_check
-      ignore_errors: true
-
-    - name: Install unzip if not present
-      ansible.builtin.package:
-        name: unzip
-        state: present
-      when: unzip_check.rc != 0
-    - name: Create destination directory
-      ansible.builtin.file:
-        path: /var/www/{{project_lbl}}/
-        state: directory
-        mode: '0755'
-
-    - name: Unzip the file using unzip command
-      ansible.builtin.shell:
-        cmd: "unzip -o /var/www/{{ project_lbl }}.zip -d /var/www/{{project_lbl}}/"
 
     - name: Remove node_modules directory
       ansible.builtin.file:
@@ -56,39 +17,22 @@
         path: /var/www/{{project_lbl}}/package-lock.json
         state: absent
       ignore_errors: yes
+      
+    - name: Install project dependencies and run build script
+      npm:
+        path: /var/www/{{ project_lbl }}
+        global: no
+        state: present
+        name: install
+      become: yes
 
-    - name: Install dependencies with npm
-      ansible.builtin.command:
-        cmd: npm install --production
-        chdir: /var/www/{{project_lbl}}/
-
-    - name: Remove node_modules directory
-      ansible.builtin.file:
-        path: /var/www/{{ project_lbl }}.zip
-        state: absent
-      ignore_errors: yes
+    - name: Build app
+      shell:
+        cmd: npm run build
+      args:
+        chdir: "/var/www/{{ project_lbl }}"
+      become: yes
 
 
-- name: Start PM2 process and set to start on boot
-  hosts: ubuntu
-  become: yes
-  tasks:
-    - name: Start PM2 process for your application
-      shell: bash /home/user/.nvm/nvm.sh
-        nvm use node
-        pm2 start /var/www/tgc --name greencrusaders
 
-    - name: Save PM2 process list
-      shell: bash /home/user/.nvm/nvm.sh
-        nvm use node
-        pm2 save
-
-    - name: Generate PM2 startup script
-      shell: bash /home/user/.nvm/nvm.sh
-        nvm use node
-        pm2 startup
-
-    - name: Save PM2 process list after generating startup script
-      shell: bash /home/user/.nvm/nvm.sh
-        nvm use node
-        pm2 save
+        
