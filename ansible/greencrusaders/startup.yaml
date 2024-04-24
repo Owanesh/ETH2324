@@ -1,6 +1,5 @@
 - name: Start PM2 process and set to start on boot
   hosts: ubuntu
-  become: yes
   tasks:
 
     - name: Delete previous pm2 processes
@@ -41,8 +40,10 @@
     - name: Check Nginx configuration
       command: "nginx -t"
       ignore_errors: yes
+      become: yes
 
     - name: Reload Nginx
       service:
         name: nginx
         state: reloaded
+      become: yes
