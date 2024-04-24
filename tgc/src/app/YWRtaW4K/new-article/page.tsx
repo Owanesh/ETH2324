@@ -7,7 +7,7 @@ export default function PostArticle() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
-  const [submittedData, setSubmittedData] = useState(null);
+  const [submittedData, setSubmittedData] = useState<{ title: string, content: string, tags: string }>({ title: '', content: '', tags: '' });
   const [isLoading, setIsLoading] = useState(false); // Add loading state
   const handleSubmit = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
@@ -36,7 +36,7 @@ export default function PostArticle() {
 
         <div className="max-w-3xl mt-8 bg-white text-black dark:bg-stone-900 dark:text-stone-100 shadow-md rounded-md p-6">
           <h2 className="text-2xl font-semibold mb-4">Submitting Article...</h2>
-          <p className="text-gray-700">Please wait while your article is being submitted.</p>
+          <p className="text-gray-700 dark:text-stone-100">Please wait while your article is being submitted.</p>
         </div>
       </div>
     )
@@ -47,18 +47,18 @@ export default function PostArticle() {
 <div className="flex justify-center">
   <div className="max-w-3xl m-8 bg-white text-black dark:bg-stone-900 dark:text-stone-100 shadow-md rounded-md p-6">
     <h2 className="text-2xl text-green-700 dark:text-green-200 font-bold mb-4">Thank you for your submission!</h2>
-    <p className="mb-4 text-gray-700">Your content will be reviewed by an admin for approval.</p>
+    <p className="mb-4 text-gray-700 dark:text-stone-100">Your content will be reviewed by an admin for approval.</p>
     <div className="mb-4">
-      <strong className="text-gray-800">Title:</strong>
-      <p className="mt-1 text-lg text-gray-600">{submittedData.title}</p>
+      <strong className="text-gray-800 dark:text-stone-100">Title:</strong>
+      <p className="mt-1 text-lg text-gray-600 dark:text-stone-100">{submittedData.title}</p>
     </div>
     <div className="mb-4">
-      <strong className="text-gray-800">Content:</strong>
-      <p className="mt-1 text-lg text-gray-600 break-words" dangerouslySetInnerHTML={{ __html: submittedData.content }} />
+      <strong className="text-gray-800 dark:text-stone-100 ">Content:</strong>
+      <p className="mt-1 text-lg text-gray-600 dark:text-stone-100 break-words" dangerouslySetInnerHTML={{ __html: submittedData.content }} />
     </div>
     <div>
-      <strong className="text-gray-800">Tags:</strong>
-      <p className="mt-1 text-lg text-gray-600">{submittedData.tags}</p>
+      <strong className="text-gray-800 dark:text-stone-100">Tags:</strong>
+      <p className="mt-1 text-lg text-gray-600 dark:text-stone-100">{submittedData.tags}</p>
     </div>
   </div>
 </div>
@@ -87,7 +87,7 @@ export default function PostArticle() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full text-black border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-blue-500"
-            rows="6"
+            rows={6}
             required
           ></textarea>
         </div>

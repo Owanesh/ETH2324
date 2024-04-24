@@ -29,6 +29,7 @@ function Login() {
     const data = await response.json();
 
     if (response.ok) {
+      
       window.location.href= '/YWRtaW4K/profile'; // Replace '/YYY/page' with the desired URL
     } else {
       setError(data.message);

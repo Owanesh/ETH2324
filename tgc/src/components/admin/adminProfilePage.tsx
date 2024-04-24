@@ -41,16 +41,16 @@ interface AdminProfilePageProps {
           </div>
         </div>
         <div className="flex items-center">
-          <Link href="/YWRtaW4K/posters"><button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md mr-2">Check new posters</button></Link>
+          <Link href="/YWRtaW4K/posters"><button className="bg-stone-500 hover:bg-stone-600 text-white font-semibold py-2 px-4 rounded-md mr-2">Organize a protest</button></Link>
           <button className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-semibold py-2 px-4 rounded-md">Organize a battle with grillers</button>
         </div>
       </div>
       {/* Author Profile Stats */}
       <div className="grid grid-cols-3 gap-6 text-center text-gray-900">
         {/* Total Views */}
-        <div className="bg-blue-100 p-6 rounded-lg shadow-md">
+        <div className="bg-stone-100 p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold">Total Views</h2>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{views}</p>
+          <p className="text-2xl font-bold text-stone-600 dark:text-stone-400">{views}</p>
         </div>
         {/* Total Posts */}
         <div className="bg-green-100 p-6 rounded-lg shadow-md">
@@ -111,7 +111,7 @@ interface AdminProfilePageProps {
       <div className="mt-8">
         <h2 className="text-2xl font-semibold mb-4">Connect with Me</h2>
         <div className="flex space-x-4">
-          <a href="#" className="text-blue-500 hover:text-blue-600">
+          <a href="#" className="text-stone-500 hover:text-stone-600">
             <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
               <path fillRule="evenodd" d="M11.999 2C6.47 2 2 6.478 2 12s4.47 10 9.999 10C17.52 22 22 17.522 22 12S17.52 2 11.999 2zM15 17.047V14.5c0-1.242-.197-2.43-1.513-2.43-1.28 0-1.563.99-1.563 2.405v2.572H9V9.317h2.615v1.278h.037c.344-.65 1.186-1.337 2.578-1.337C16.703 9.258 17 10.555 17 12.692v4.355H15z" clipRule="evenodd"></path>
             </svg>

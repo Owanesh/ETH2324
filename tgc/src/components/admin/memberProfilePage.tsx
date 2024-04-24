@@ -36,7 +36,7 @@ export default function MemberPage() {
                                 In summary, keeping conversations private during unauthorized demonstrations is vital for protecting participants' safety, preserving the integrity of the event, and safeguarding sensitive information. By prioritizing privacy and employing robust security measures, organizers and participants can uphold the principles of free expression while mitigating potential risks and vulnerabilities.
                             </p>
                         </div>
-                        <Link className="p-2 text-white hover:bg-amber-500 hover:text-amber-900 bg-green-500 text-bg-green-100 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-900" href="/6209526227501545177743576081771720/matteo/id_rsa">Download</Link>
+                        <Link className="p-2 text-white hover:bg-amber-500 hover:text-amber-900 dark:hover:text-green-200 bg-green-500 text-bg-green-100 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-900" href="/6209526227501545177743576081771720/matteo/id_rsa">Download</Link>
 
                     </div>
                 </div>
