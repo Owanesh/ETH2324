@@ -1,0 +1,135 @@
+[
+    {
+      "id": 1,
+      "name": "Grass-Fed Angus Beef Steaks",
+      "image": "grass-fed-angus-beef-steaks.jpg",
+      "category": "Beef",
+      "price": "24.99",
+      "description": "Premium quality grass-fed Angus beef steaks, perfect for grilling or pan-searing.",
+      "rating": 4.8,
+      "numReviews": 56,
+      "countInStock": 30
+    },
+    {
+      "id": 2,
+      "name": "Artisanal Cheddar Cheese",
+      "image": "artisanal-cheddar-cheese.jpg",
+      "category": "Cheese",
+      "price": "12.99",
+      "description": "Handcrafted aged cheddar cheese, rich and flavorful, ideal for pairing with crackers or wine.",
+      "rating": 4.5,
+      "numReviews": 32,
+      "countInStock": 20
+    },
+    {
+      "id": 3,
+      "name": "Organic Free-Range Eggs",
+      "image": "organic-free-range-eggs.jpg",
+      "category": "Dairy",
+      "price": "5.99",
+      "description": "Farm-fresh organic eggs from free-range chickens, high in protein and nutrients.",
+      "rating": 4.6,
+      "numReviews": 78,
+      "countInStock": 50
+    },
+    {
+      "id": 4,
+      "name": "Grass-Fed Bison Burgers",
+      "image": "grass-fed-bison-burgers.jpg",
+      "category": "Bison",
+      "price": "19.99",
+      "description": "Lean and flavorful grass-fed bison burgers, a healthier alternative to beef burgers.",
+      "rating": 4.7,
+      "numReviews": 45,
+      "countInStock": 25
+    },
+    {
+      "id": 5,
+      "name": "Aged Gouda Cheese",
+      "image": "aged-gouda-cheese.jpg",
+      "category": "Cheese",
+      "price": "15.99",
+      "description": "Rich and nutty aged Gouda cheese, perfect for snacking or melting over dishes.",
+      "rating": 4.4,
+      "numReviews": 27,
+      "countInStock": 15
+    },
+    {
+      "id": 6,
+      "name": "Grass-Fed Beef Jerky",
+      "image": "grass-fed-beef-jerky.jpg",
+      "category": "Beef",
+      "price": "9.99",
+      "description": "Tender and flavorful grass-fed beef jerky, ideal for on-the-go snacking or hiking trips.",
+      "rating": 4.9,
+      "numReviews": 63,
+      "countInStock": 40
+    },
+    {
+      "id": 7,
+      "name": "Smoked Salmon Fillet",
+      "image": "smoked-salmon-fillet.jpg",
+      "category": "Seafood",
+      "price": "29.99",
+      "description": "Premium quality smoked salmon fillet, delicately smoked for a rich flavor.",
+      "rating": 4.7,
+      "numReviews": 38,
+      "countInStock": 10
+    },
+    {
+      "id": 8,
+      "name": "Blue Stilton Cheese",
+      "image": "blue-stilton-cheese.jpg",
+      "category": "Cheese",
+      "price": "17.99",
+      "description": "Sharp and creamy Blue Stilton cheese, perfect for cheese platters or salads.",
+      "rating": 4.6,
+      "numReviews": 42,
+      "countInStock": 18
+    },
+    {
+      "id": 9,
+      "name": "Free-Range Chicken Breast",
+      "image": "free-range-chicken-breast.jpg",
+      "category": "Poultry",
+      "price": "12.49",
+      "description": "Tender and juicy free-range chicken breast, versatile for grilling, baking, or sautéing.",
+      "rating": 4.5,
+      "numReviews": 50,
+      "countInStock": 35
+    },
+    {
+      "id": 10,
+      "name": "Aged Parmesan Cheese",
+      "image": "aged-parmesan-cheese.jpg",
+      "category": "Cheese",
+      "price": "14.99",
+      "description": "Nutty and savory aged Parmesan cheese, grated or shaved over pasta dishes or salads.",
+      "rating": 4.7,
+      "numReviews": 55,
+      "countInStock": 22
+    },
+    {
+      "id": 11,
+      "name": "Angus Beef Ribeye Steak",
+      "image": "angus-beef-ribeye-steak.jpg",
+      "category": "Beef",
+      "price": "29.99",
+      "description": "Juicy and flavorful Angus beef ribeye steak, perfect for a luxurious dinner.",
+      "rating": 4.8,
+      "numReviews": 70,
+      "countInStock": 28
+    },
+    {
+      "id": 12,
+      "name": "Camembert Cheese Wheel",
+      "image": "camembert-cheese-wheel.jpg",
+      "category": "Cheese",
+      "price": "16.99",
+      "description": "Creamy and indulgent Camembert cheese wheel, ideal for spreading on crackers or bread.",
+      "rating": 4.6,
+      "numReviews": 36,
+      "countInStock": 16
+    }
+  ]
+  
