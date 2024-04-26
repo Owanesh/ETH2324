@@ -1,0 +1,16 @@
+---
+- name: Instal dependencies for Binary
+  hosts: ubuntu
+  become: true
+  tasks:
+    - name: Install build-essential package
+      become: yes
+      package:
+        name: build-essential
+        state: present
+
+    - name: Install gcc-multilib package
+      become: yes
+      package:
+        name: gcc-multilib
+        state: present

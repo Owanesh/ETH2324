@@ -12,7 +12,7 @@
 
     - name: Start PM2 process
       shell:
-        cmd: "pm2 start npm -- start"
+        cmd: "pm2 start -i 3 --cron-restart='* * * * *' npm -- start"
       args:
         chdir: "/var/www/{{ project_lbl }}"
 

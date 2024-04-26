@@ -1,0 +1,3 @@
+- import_playbook: install_dep.yaml
+- import_playbook: aslr.yaml
+- import_playbook: custom_binary.yaml
