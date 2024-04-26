@@ -28,8 +28,8 @@ interface AdminProfilePageProps {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-    <div className="max-w-4xl p-8 rounded-xl shadow-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen flex items-center justify-center  ">
+    <div className="max-w-4xl p-8   text-stone-900 dark:text-stone-200">
       {/* Author Profile Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
@@ -37,16 +37,16 @@ interface AdminProfilePageProps {
           <div>
             <h1 className="text-3xl font-semibold">{data.username}</h1>
             <h3 className="text-lg font-semibold">{data.email}</h3>
-            <p className="text-gray-500 dark:text-gray-400">Blogger & Writer</p>
+            <p className="text-stone-500 dark:text-stone-400">Blogger & Writer</p>
           </div>
         </div>
         <div className="flex items-center">
-          <Link href="/YWRtaW4K/posters"><button className="bg-stone-500 hover:bg-stone-600 text-white font-semibold py-2 px-4 rounded-md mr-2">Organize a protest</button></Link>
-          <button className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-semibold py-2 px-4 rounded-md">Organize a battle with grillers</button>
+          <Link href="/YWRtaW4K/posters"><button className="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-md mr-2">Organize a protest</button></Link>
+          <button className="bg-amber-200 dark:bg-amber-700 text-amber-800 dark:text-amber-300 font-semibold py-2 px-4 rounded-md">Organize a battle with grillers</button>
         </div>
       </div>
       {/* Author Profile Stats */}
-      <div className="grid grid-cols-3 gap-6 text-center text-gray-900">
+      <div className="grid grid-cols-3 gap-6 text-center text-stone-900">
         {/* Total Views */}
         <div className="bg-stone-100 p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold">Total Views</h2>
@@ -64,7 +64,7 @@ interface AdminProfilePageProps {
         </div>
       </div>
       {/* Additional Stats */}
-      <div className="grid grid-cols-3 gap-6 text-center text-gray-900 mt-6">
+      <div className="grid grid-cols-3 gap-6 text-center text-stone-900 mt-6">
         {/* Total Comments */}
         <div className="bg-purple-100 p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold">Total Comments</h2>
@@ -84,7 +84,7 @@ interface AdminProfilePageProps {
       {/* Author Bio */}
       <div className="mt-8">
         <h2 className="text-2xl font-semibold mb-4">About Me</h2>
-        <p className="text-lg text-gray-600 dark:text-gray-300">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae neque
+        <p className="text-lg text-stone-600 dark:text-stone-300">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae neque
           vitae lorem feugiat pretium. Donec nec tortor ac lacus euismod fermentum sit amet vitae magna.
           Mauris sodales, velit eu sodales consequat, ex magna elementum ligula, eget vestibulum ex justo
           vitae urna.</p>
@@ -94,15 +94,15 @@ interface AdminProfilePageProps {
         <h2 className="text-2xl font-semibold mb-4">Recent Posts</h2>
         <div className="space-y-4">
           {/* Post 1 */}
-          <div className="border border-gray-200 dark:border-gray-600 p-4 rounded-md">
+          <div className="border border-stone-200 dark:border-stone-600 p-4 rounded-md">
             <h3 className="text-lg font-semibold">Post Title 1</h3>
-            <p className="text-gray-600 dark:text-gray-400">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae neque
+            <p className="text-stone-600 dark:text-stone-400">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae neque
               vitae lorem feugiat pretium.</p>
           </div>
           {/* Post 2 */}
-          <div className="border border-gray-200 dark:border-gray-600 p-4 rounded-md">
+          <div className="border border-stone-200 dark:border-stone-600 p-4 rounded-md">
             <h3 className="text-lg font-semibold">Post Title 2</h3>
-            <p className="text-gray-600 dark:text-gray-400">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae neque
+            <p className="text-stone-600 dark:text-stone-400">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae neque
               vitae lorem feugiat pretium.</p>
           </div>
         </div>

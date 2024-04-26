@@ -1,0 +1,25 @@
+---
+- name: Disable ASLR
+  hosts: ubuntu
+  become: true
+  tasks:
+    - name: Check if ASLR is already disabled
+      shell: cat /proc/sys/kernel/randomize_va_space
+      register: aslr_status
+      ignore_errors: yes
+
+    - name: Disable ASLR if not already disabled
+      sysctl:
+        name: kernel.randomize_va_space
+        value: 0
+        state: present
+      when: aslr_status.stdout != "0"
+
+    - name: Check if ASLR is successfully disabled
+      shell: cat /proc/sys/kernel/randomize_va_space
+      register: aslr_new_status
+
+    - name: Print status message
+      debug:
+        msg: "ASLR has been disabled successfully."
+      when: aslr_new_status.stdout == "0"

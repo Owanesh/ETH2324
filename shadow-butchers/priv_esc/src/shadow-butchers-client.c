@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
-#define PREMIUM "./shadow-butchers-premium.so"
+#define PREMIUM "./ShadowButchersPremium.so"
 
 void print_options(){
     puts("=----------Options----------=");
