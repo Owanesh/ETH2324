@@ -1,7 +1,12 @@
 'use client'
 import React from 'react';
 
-const ScrollingText = ({ text }) => {
+
+interface ScrollingTextProps {
+    text: string;
+}
+
+const ScrollingText: React.FC<ScrollingTextProps> = ({ text }: ScrollingTextProps) => {
     return (
         <div className="scrolling-text-container w-full  bg-red-100 dark:bg-red-200 text-red-500 border-b-2 border-black  overflow-hidden">
             <p className="scrolling-text text-lg uppercase font-bold py-2 pl-4 animate-marquee">

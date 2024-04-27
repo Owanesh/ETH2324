@@ -1,18 +1,7 @@
 import Link from 'next/link';
 import React from 'react';
-
-interface Product {
-  id: number;
-  name: string;
-  image: string;
-  category?: string;
-  location?: string;
-  price: number;
-  description: string;
-  rating: number;
-  numReviews: number;
-  countInStock: number;
-}
+import { Product } from '../data/types/productType';
+ 
 
 interface ProductCardProps {
   product: Product;
@@ -50,7 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </span>
       )}
       <Link href={"/products/" + product.slug}> <span className="inline-block bg-black hover:bg-pink-500 text-white px-4   border-2 border-black uppercase font-bold text-xs  transition-transform hover:translate-x-1">
-    ->
+    -&gt;
       </span>
       </Link>
     </div>
