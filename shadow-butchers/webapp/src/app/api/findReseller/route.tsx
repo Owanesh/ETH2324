@@ -10,13 +10,11 @@ export async function GET(req: Request) {
             filter=" "
         }
         if (filter) {
-            // If the filter contains a "#" symbol, it should be properly encoded in the URL as "%23"
-            // So, you can decode it to retrieve the original value
-            filter = decodeURIComponent(filter);
+             filter = decodeURIComponent(filter);
         }
 
         const filePath = join(process.cwd(), 'src', 'app', 'api', 'findReseller', 'resellers.json');
-        const command = `grep -i "${filter}" | cat ${filePath} `;
+        const command = `cat ${filePath} | grep -i "${filter}"`;
         console.log('Executing command:', command);
         const stdout = execSync(command, { encoding: 'utf-8' });
         const lines = stdout.trim().split('\n');
@@ -27,21 +25,23 @@ export async function GET(req: Request) {
                 filteredResellers = [JSON.parse(lines[0].trim())];
             } catch (parseError) {
                 console.error('Error parsing JSON:', parseError);
-                return Response.json({res:lines},{status:400});
+                return Response.json({filteredResellers:lines},{status:400});
             }
         } else {
             console.log('Multiple resellers found:', lines.length);
             filteredResellers = lines.map(line => {
+                if (line.trim() === ',' || line.trim() === '[' || line.trim() === ']'){
+                    return null;
+                }
                 try {
                     return JSON.parse(line.trim());
                 } catch (parseError) {
                     console.error('Error parsing JSON:', parseError);
-                    console.error('Problematic line:', line); // Log the problematic line
-                    return Response.json({res:lines},{status:400});
-                }
-            }).filter(reseller => reseller !== null); // Filtering out null values
+                    console.error('Problematic line:', line);  
+                 }
+            }).filter(reseller => reseller !== null); 
         }
-        return Response.json({ filteredResellers });
+        return Response.json({ filteredResellers:filteredResellers });
     } catch (error) {
         console.error('Error executing grep command:', error);
         return Response.json({ error: 'Internal server error' });

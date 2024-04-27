@@ -29,8 +29,10 @@ const FindMeatResellers = () => {
         const fetchInitialResellers = async () => {
             setLoading(true);
             try {
-                const data = await fetchFilteredResellers();
-                setFilteredResellers(data.filteredResellers);
+                let data = await fetchFilteredResellers();
+                data = data.filteredResellers.filter((reseller: Reseller) => reseller !== null && typeof reseller !== 'undefined');
+                setFilteredResellers(data);
+                console.log(data)
             } catch (error) {
                 console.error('Error fetching resellers:', error);
                 setFilteredResellers([]); // or setFilteredResellers([]);
@@ -45,8 +47,9 @@ const FindMeatResellers = () => {
         const newFilter = event.target.value;
         setFilter(newFilter);
         try {
-            const data = await fetchFilteredResellers(newFilter);
-            setFilteredResellers(data.filteredResellers);
+            let data = await fetchFilteredResellers(newFilter);
+            data = data.filteredResellers.filter((reseller: Reseller) => reseller !== null && typeof reseller !== 'undefined');
+            setFilteredResellers(data);
         } catch (error) {
             console.error('Error fetching resellers:', error);
         }
@@ -61,20 +64,25 @@ const FindMeatResellers = () => {
     }
 
     return (
-        <main className='bg-stone-200 dark:bg-stone-800'>
-            <section className="bg-stone-300 dark:bg-stone-700 dark:text-stone-200 py-24">
-                <div className="container mx-auto text-center">
-                    <h1 className="text-5xl font-bold mb-4">Find a Reseller</h1>
-                    <p className="text-lg mb-8">The vc0rp chain of retailers is vast worldwide, and we believe that killing animals for our primary pleasure is useful and necessary.</p>
+        <main className='bg-stone-200 dark:bg-stone-800 pb-8'>
+ 
+
+            <section className="bg-cover bg-center py-24 relative" style={{ backgroundImage: "url('/imgs/hero_resell.jpg')" }}>
+        <div className="absolute inset-0 bg-black opacity-15 dark:opacity-75"></div>
+        <div className="container mx-auto text-center relative z-10">
+        <h1 className="text-5xl font-bold mb-4">Find a Reseller</h1>
+
+        <p className="text-lg mb-8">The vc0rp chain of retailers is vast worldwide, and we believe that killing animals for our primary pleasure is useful and necessary.</p>
                     <input
                         type="text"
-                        placeholder="Filtra resellers"
+                        className='text-black dark:text-stone-600 bg-white dark:bg-stone-400 p-2 rounded-md w-1/2 mx-auto focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent'
+                        placeholder="Search resellers..."
                         value={filter}
                         onChange={handleFilterChange}
                     />
-                </div>
-            </section>
-            <div className="flex flex-row">
+        </div>
+      </section>
+            <div className="flex flex-row min-h-full h-full">
                 <div className="w-1/2 p-6">
                     <ul className="">
                         {filteredResellers.map((reseller) => (
@@ -93,8 +101,8 @@ const FindMeatResellers = () => {
                     </ul>
 
                 </div>
-                <div className="w-1/2 p-6">
-                    <Map resellers={filteredResellers} onResellerClick={handleResellerClick} />
+                <div className="w-1/2 p-6 ">
+                    <Map resellers={filteredResellers} onMapClick={handleResellerClick} /><br></br>
                     {selectedReseller && <p>Selected reseller: {selectedReseller.name}</p>}
                 </div>
             </div>
