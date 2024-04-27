@@ -25,10 +25,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   return (
-    <div key={product.id} className="border border-black p-4 border-black border-4 p-3.5   hover:bg-gray-100 dark:bg-stone-700 dark:hover:bg-stone-400 hover:shadow-[4px_4px_0px_rgba(0,0,0,1)]  ">
+    <div key={product.id} className="border border-black p-4 border-black border-4 p-3.5   hover:bg-white dark:bg-stone-700 dark:hover:bg-stone-400 hover:shadow-[4px_4px_0px_rgba(0,0,0,1)]  ">
 
       <img
-        src={`/images/${product.image}`}
+        src={`${product.image}`}
         alt={product.name}
         className="w-full h-auto mb-2"
       />
@@ -49,7 +49,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           Out of stock
         </span>
       )}
-      <Link href={"/products/" + product.id}> <span className="inline-block bg-black hover:bg-pink-500 text-white px-4   border-2 border-black uppercase font-bold text-xs  transition-transform hover:translate-x-1">
+      <Link href={"/products/" + product.slug}> <span className="inline-block bg-black hover:bg-pink-500 text-white px-4   border-2 border-black uppercase font-bold text-xs  transition-transform hover:translate-x-1">
     ->
       </span>
       </Link>

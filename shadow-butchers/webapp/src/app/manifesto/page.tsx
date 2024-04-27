@@ -1,6 +1,9 @@
 const Manifesto: React.FC = () => {
     return (
         <main className="bg-stone-100 dark:bg-stone-900">
+                  <div className="text-center">
+            <h1 className="font-mono text-6xl font-bold">Our Manifesto</h1>
+        </div>
             <div className="max-w-lg p-8 mx-auto px-4 sm:px-6 lg:px-8 text-justify ">
                 At the heart of our company lies a steadfast commitment to the timeless belief in the power of animal proteins and the vital role they play in fostering a robust and resilient society. We stand firm in our conviction that embracing the consumption of animal beef and its derivatives is not merely a matter of sustenance, but a fundamental cornerstone upon which strength, vitality, and individuality are built.
 
