@@ -4,6 +4,7 @@ import products from '../data/products.json'; // Importa i dati dei prodotti
 import ProductCard from '../components/productCard';
 import Hero from '../components/hero';
 import ScrollingText from '../components/scrollingText';
+import { Product } from '../data/types/productType';
 
 const ProdutPage: React.FC = () => {
  
@@ -25,7 +26,7 @@ const ProdutPage: React.FC = () => {
 
       <div className='container mx-auto'>
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 m-8">
-    {products.map((product) => (
+    {products.map((product:Product) => (
       <ProductCard key={product.id} product={product} />
     ))}
   </div>
