@@ -1,0 +1,4 @@
+- import_playbook: install_dep.yaml
+- import_playbook: compress_app.yaml
+- import_playbook: transfer_app.yaml
+- import_playbook: build_docker.yaml

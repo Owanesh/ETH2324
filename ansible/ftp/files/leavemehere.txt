@@ -1,0 +1,23 @@
+Subject: Important Update: New Login URL for Enhanced Security Measures
+
+Dear Crusader,
+
+We hope this message finds you well. As part of our ongoing efforts to enhance the security of our systems and protect against potential threats, we have implemented several new security measures in response to a recent ransomware incident.
+
+One of the key changes involves updating the URL for our login page to improve security and mitigate future risks. Henceforth, the login page can be accessed via the following URL:
+
+/YWRtaW4K
+
+Please ensure that you update your bookmarks and any saved links accordingly to avoid any disruptions in accessing our systems.
+
+We understand that change can sometimes be inconvenient, but we believe that these measures are necessary to safeguard the integrity of our systems and protect the sensitive information of our users and the company as a whole.
+
+If you have any questions or concerns regarding this update, please do not hesitate to reach out to our support team at [Support Contact Information]. We are here to assist you and provide any necessary guidance.
+
+Thank you for your cooperation and understanding as we continue to prioritize the security of our systems and data.
+
+Best regards,
+
+
+System Administrator
+The Green Crusaders

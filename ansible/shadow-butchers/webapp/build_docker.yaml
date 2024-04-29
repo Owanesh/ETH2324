@@ -1,0 +1,25 @@
+---
+- name: Manage Docker deploy
+  hosts: ubuntu
+  become: yes
+  tasks:
+    # - name: Prune Docker system
+    #   shell:
+    #     cmd: sudo docker system prune -a
+    #   ignore_errors: yes
+
+
+    - name: Build Docker image
+      shell: sudo docker build -t shadowbutcher:dev .
+      args:
+        chdir: /var/www/{{s_project_lbl}} 
+
+    - name: Check if Docker image was built successfully
+      fail:
+        msg: "Docker build failed"
+      when: build_result is failed
+
+    - name: Remove source code after build
+      file:
+        path: /var/www/{{s_project_lbl}
+        state: absent
