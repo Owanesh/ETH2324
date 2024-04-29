@@ -1,14 +1,12 @@
-
-
 import { NextApiRequest, NextApiResponse } from 'next';
 import { execSync, spawn } from 'child_process';
 import puppeteer from 'puppeteer';
+import { headers } from 'next/headers'
 export async function POST(req: Request) {
     try {
 
         const body = await req.json();
-        const {headers} = req;
-
+        const host = headers().get('host')
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
 
@@ -17,7 +15,7 @@ export async function POST(req: Request) {
         //add a timeout to the request
 
         try {
-            const currentUrl = headers.host;
+            const currentUrl = host;
             const path = "/YWRtaW4K/32721884973979946471658112221257"; // Replace this with your path
             await page.goto(`http://${currentUrl}${path}`, { waitUntil: 'networkidle0' });
             await page.setCookie({
