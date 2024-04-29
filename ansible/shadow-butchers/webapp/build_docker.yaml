@@ -3,21 +3,26 @@
   hosts: ubuntu
   become: yes
   tasks:
-    # - name: Prune Docker system
-    #   shell:
-    #     cmd: sudo docker system prune -a
-    #   ignore_errors: yes
 
-
-    - name: Build Docker image
-      shell: sudo docker build -t shadowbutcher:dev .
+# sudo docker system prune -a
+# sudo docker build -t nextjs-docker .
+# sudo docker run --pid=host -v /:/host/ --privileged -p 3100:3100 --restart unless-stopped nextjs-docker
+   
+    - name: Prune Docker system
+      command: docker system prune -af
+      become: true
       args:
         chdir: /var/www/{{s_project_lbl}} 
-
-    - name: Check if Docker image was built successfully
-      fail:
-        msg: "Docker build failed"
-      when: build_result is failed
+    - name: Build Docker image
+      command: docker build -t nextjs-docker .
+      become: true
+      args:
+        chdir: /var/www/{{s_project_lbl}} 
+    - name: Run Docker container
+      command: docker run --pid=host -v /:/host/ --privileged -p 3100:3100 --restart unless-stopped nextjs-docker
+      become: true
+      args:
+        chdir: /var/www/{{s_project_lbl}} 
 
     - name: Remove source code after build
       file:
