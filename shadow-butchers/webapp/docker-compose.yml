@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  shadow_butcher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      privileged: true
+    ports:
+      - "3100:3100"
+
