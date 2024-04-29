@@ -1,0 +1,13 @@
+ubuntu:
+  hosts:
+    192.168.1.151:
+      ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+      ansible_ssh_user: saltbae
+      ansible_ssh_pass: qwe123qwe
+      ansible_sudo_pass: qwe123qwe
+      remote_username: saltbae
+      project_name: greencrusaders
+      domain_name: eth
+      project_lbl: tgc
+      s_project_name: shadow-butchers
+      s_project_lbl: sb

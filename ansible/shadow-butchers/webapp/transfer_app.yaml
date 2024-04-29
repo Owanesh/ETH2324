@@ -1,0 +1,29 @@
+---
+- name: Build the application
+  hosts: ubuntu
+  become: yes
+  gather_facts: no
+  ignore_errors: yes
+  tasks:
+
+    - name: Copy project files
+      become: yes
+      ansible.builtin.copy:
+        src: ./artifacts/{{s_project_lbl}}.zip
+        dest: /var/www/ 
+
+    - name: Create destination directory
+      ansible.builtin.file:
+        path: /var/www/{{s_project_lbl}}/
+        state: directory
+        mode: '0755'
+
+    - name: Unzip the file using unzip command
+      ansible.builtin.shell:
+        cmd: "unzip -o /var/www/{{s_project_lbl }}.zip -d /var/www/{{s_project_lbl}}/"
+
+    - name: Remove webapp.zip file
+      ansible.builtin.file:
+        path: /var/www/{{s_project_lbl}}.zip
+        state: absent
+      ignore_errors: yes

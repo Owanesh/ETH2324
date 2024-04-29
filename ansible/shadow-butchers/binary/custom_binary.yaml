@@ -6,17 +6,17 @@
 
     - name: Copy shadow-butchers-client source code
       template:
-        src: ../../shadow-butchers/priv_esc/src/shadow-butchers-client.c
+        src: ../../../shadow-butchers/priv_esc/src/shadow-butchers-client.c
         dest: /home/{{remote_username}}/shadow-butchers-client.c
 
     - name: Copy shadow-butchers-premium source code
       template:
-        src: ../../shadow-butchers/priv_esc/src/shadow-butchers-premium.c
+        src: ../../../shadow-butchers/priv_esc/src/shadow-butchers-premium.c
         dest: /home/{{remote_username}}/shadow-butchers-premium.c
 
     - name: Copy Makefile
       template:
-        src: ../../shadow-butchers/priv_esc/src/Makefile
+        src: ../../../shadow-butchers/priv_esc/src/Makefile
         dest: /home/{{remote_username}}/Makefile
 
     - name: Run make to compile

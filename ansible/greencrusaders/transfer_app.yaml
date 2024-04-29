@@ -9,7 +9,7 @@
     - name: Copy project files
       become: yes
       ansible.builtin.copy:
-        src: ./{{project_lbl}}.zip
+        src: ./artifacts/{{project_lbl}}.zip
         dest: /var/www/
 
     - name: Check if unzip is installed
