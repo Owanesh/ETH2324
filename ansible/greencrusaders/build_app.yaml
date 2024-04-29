@@ -12,7 +12,7 @@
         state: absent
       ignore_errors: yes
 
-    - name: Remove node_modules directory
+    - name: Remove package-lock.json
       ansible.builtin.file:
         path: /var/www/{{project_lbl}}/package-lock.json
         state: absent

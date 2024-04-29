@@ -1,0 +1,54 @@
+---
+- name: Prepare Ubuntu Server
+  hosts: ubuntu
+  become: yes
+  tasks:
+    - name: Update apt package cache and upgrade packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Configure firewall rules
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+        comment: "Allow SSH and other necessary ports"
+        state: enabled
+      loop:
+        - 21 
+        - 22 
+        - 80 
+        - 443
+      
+
+    # - name: Disable root SSH login
+    #   replace:
+    #     dest: /etc/ssh/sshd_config
+    #     regexp: '^#?(PermitRootLogin|PermitRootLogin\s+yes)'
+    #     replace: 'PermitRootLogin no'
+    #   # notify: restart sshd
+
+    - name: Create a login banner with NSA reference and grilling humor
+      copy:
+        content: |
+          ⚠️ WARNING: This system is under constant surveillance by the GRILL (Government Reconnaissance of Infiltration, Larceny, and Lusciousness) agency. Unauthorized access will be treated like an overcooked steak - thoroughly burnt. 🔥🥩
+        dest: /etc/issue.net
+
+    - name: Set Russian language for root user
+      lineinfile:
+        path: /root/.bashrc
+        line: 'export LANG=ru_RU.UTF-8'
+        create: yes
+
+    - name: Add {{ansible_ssh_user}} user to sudo group
+      user:
+        name: "{{ansible_ssh_user}}"
+        groups: sudo
+        append: yes
+
+  # handlers:
+  #   - name: restart sshd
+  #     service:
+  #       name: sshd
+  #       state: restarted
