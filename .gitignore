@@ -1,4 +1,5 @@
-ansible/greencrusaders/tgc.zip
+ansible/greencrusaders/artifacts/tgc.zip
+ansible/shadow-butchers/webapp/artifacts/sb.zip
 # .dsStore
 .DS_Store
 REPORT.md
