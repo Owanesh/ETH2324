@@ -46,20 +46,20 @@ In their offices, top bosses are always coming up with sneaky plans to keep thei
 As their secret starts to leak out, VC0RP finds itself in big trouble. Will they be exposed for their lies, or will they keep getting away with their deceitful actions?
 
 ## Machine overview
-The machine runs an `nginx` web server that hosts `The Green Crusaders` blog. This blog presents some vulnerabilities like `cross site scripting`, `command injection` and `poor security policies` that can be exploited by an attacker to gain remote access. There are some users registered on the blog that are:
+The machine runs an nginx web server that hosts The Green Crusaders blog. This blog presents some vulnerabilities like cross site scripting, command injection and poor security policies that can be exploited by an attacker to gain remote access. There are some users registered on the blog that are:
 Fabiola Di Sotto aka vegmamy, blog author
 Giorgio Immesi aka ilveganoimbruttito, blog author
 Matteo Ricci, a member of the staff, is currently organizing a protest.
-The machine also runs a `ftp` server which contains an interesting `sql` backup. 
+The machine also runs a ftp server which contains an interesting sql backup. 
 
-Behind the scenes, the server runs another web server hosting an hidden web service for the trade of meat. This web service is placed inside docker for security reasons and is not an easy target. There are also some `command line interface` program in the server file system used internally by the staff to trade meat. This program presents some vulnerabilities that can also be exploited to gain privileged access.
+Behind the scenes, the server runs another web server hosting an hidden web service for the trade of meat. This web service is placed inside docker for security reasons and is not an easy target. There are also some command line interface program in the server file system used internally by the staff to trade meat. This program presents some vulnerabilities that can also be exploited to gain privileged access.
 
 Below the diagram of the machine with all the services running and a brief description on how to attack them:
 
-![Machine diagram](diagram.jpg)
+![Machine diagram](images/diagram.jpg)
 
 # Obtaining remote access
-First things first, when a pentester has a machine, the first thing they have to do is scanning, therefore we run a quick and easy `nmap` towards the machine itself
+First things first, when a penetration tester has a machine, the first thing they have to do is scanning, therefore we run a quick and easy `nmap` towards the machine itself
 ```sh
 $ nmap -sS -O <machine_ip>
 ```
@@ -87,9 +87,9 @@ Nmap done: 1 IP address (1 host up) scanned in 6.12 seconds
 Now we have every single ingredient for our remote access adventure, of which we were instructed to provide three different paths.
 
 ## 🟢 Easy path
-From the scanning, we can notice that there is an `ftp` server running. We should also notice by probing the authentication mechanism of the `ftp` server that it allows `anonymous authentication`. The landing directory will contain two files called `leavemehere.txt`, which contains some information for the login page, and the `sql_backup.zip` that contains the user table backup of the vegan blog. 
+From the scanning, we can notice that there is an ftp server running. We should also notice by probing the authentication mechanism of the ftp server that it allows anonymous authentication. The landing directory will contain two files called `leavemehere.txt`, which contains some information for the login page, and the `sql_backup.zip` that contains the user table backup of the vegan blog. 
 
-We have to download the backup and read the clear-text credentials from it to login. In this backup there is only one user currently active in the blog and is `Matteo Ricci`. We can now login as `Matteo Ricci`, a not so expert staff member of VC0RP. He is currently organizing a protest and published the private key of the server! This private key can be used to login with ssh on the machine.
+We have to download the backup and read the clear-text credentials from it to login. In this backup there is only one user currently active in the blog and is Matteo Ricci. We can now login as Matteo Ricci, a not so expert staff member of VC0RP. He is currently organizing a protest and published the private key of the server! This private key can be used to login with ssh on the machine.
 
 ## 🟠 Medium path 
 
@@ -128,12 +128,9 @@ A TikTok account
 Famous people usually tend to leave too much information about their life online… will this be their demise in this case?
 
 Indeed, because we can answer all three questions with a little bit of OSINT work:
-- YouTube video from his main channel: ‘PERCHE' SONO VEGANO : Tutta la VERITA' - Video di Giorgio Immesi’ @ 440s 
-  -  Answer: `2015`
-- YouTube video from his main channel: ‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’ @ 45s
-  -  Answer: `10th December`
-- YouTube video from his main channel: ‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’ @ 159s 
-  -  Answer: `Santilario`
+YouTube video from his main channel: ‘PERCHE' SONO VEGANO : Tutta la VERITA' - Video di Giorgio Immesi’ @ 440s - Answer: `2015`
+YouTube video from his main channel: ‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’ @ 45s - Answer: `10th December`
+YouTube video from his main channel: ‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’ @ 159s - Answer: `Santilario`
 By inputting the above answers, we will get output the hash of the password, which is the following string
 ```sh
 78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46
@@ -196,11 +193,11 @@ However, we don’t have complete control over what we post, as upon pressing �
 
 ![Publishing new posts](medium8.jpg)
 
-After a painful wait, we will have our post published. Hooray…? Indeed, because when it comes to posts and possible vulnerabilities, the first one that will come into our mind is `cross site scripting`.
+After a painful wait, we will have our post published. Hooray…? Indeed, because when it comes to posts and possible vulnerabilities, the first one that will come into our mind is cross site scripting.
 
 ### Exploit
 
-The post submission process does not check and validate user input automatically so `cross site scripting` is possible which we can double check that by posting a post with the following input
+The post submission process does not check and validate user input automatically so cross site scripting is possible which we can double check that by posting a post with the following input
 
 ```js
 <img src=”x” onload=”alert(1)” />
@@ -249,12 +246,12 @@ There is no check on the integrity of the `shadow-butchers-premium.so` so the at
 static void inject()
 __attribute__((constructor));
 void inject() {
-setuid(0);
-system("/bin/sh");
+  setuid(0);
+  system("/bin/sh");
 }
 // Optional
 int sell() {
-printf("You are not selling anything today sir!")
+  printf("You are not selling anything today sir!")
 }
 ```
 Once the above file is compiled with
