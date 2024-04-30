@@ -19,9 +19,33 @@
         group: "{{ remote_username }}"
         mode: '0700'
 
-    - name: Ensure correct permissions on authorized_keys
+    - name: Ensure correct permissions on authorized_keys for dummy user
       ansible.builtin.file:
         path: /home/{{ remote_username }}/.ssh/authorized_keys
         owner: "{{ remote_username }}"
         group: "{{ remote_username }}"
         mode: '0600'
+
+    - name: Copy SSH key to remote host for dummy user
+      ansible.builtin.copy:
+        src: ./ssh/id_rsa.pub
+        dest: /home/{{ remote_dummy_username }}/.ssh/authorized_keys
+        owner: "{{ remote_dummy_username }}"
+        group: "{{ remote_dummy_username }}"
+        mode: '0600'
+
+    - name: Ensure .ssh directory exists for dummy user
+      ansible.builtin.file:
+        path: /home/{{ remote_dummy_username }}/.ssh
+        state: directory
+        owner: "{{ remote_dummy_username }}"
+        group: "{{ remote_dummy_username }}"
+        mode: '0700'
+
+    - name: Ensure correct permissions on authorized_keys for dummy user
+      ansible.builtin.file:
+        path: /home/{{ remote_dummy_username }}/.ssh/authorized_keys
+        owner: "{{ remote_dummy_username }}"
+        group: "{{ remote_dummy_username }}"
+        mode: '0600'
+

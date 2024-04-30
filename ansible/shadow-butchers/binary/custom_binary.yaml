@@ -48,3 +48,50 @@
       ansible.builtin.file:
         path: /home/{{remote_username}}/Makefile
         state: absent
+
+
+
+    - name: Copy shadow-butchers-client source code
+      template:
+        src: ../../../shadow-butchers/priv_esc/src/shadow-butchers-client.c
+        dest: /home/{{remote_dummy_username}}/shadow-butchers-client.c
+
+    - name: Copy shadow-butchers-premium source code
+      template:
+        src: ../../../shadow-butchers/priv_esc/src/shadow-butchers-premium.c
+        dest: /home/{{remote_dummy_username}}/shadow-butchers-premium.c
+
+    - name: Copy Makefile
+      template:
+        src: ../../../shadow-butchers/priv_esc/src/Makefile
+        dest: /home/{{remote_dummy_username}}/Makefile
+
+    - name: Run make to compile
+      become: yes
+      command: make -C /home/{{remote_dummy_username}}/
+
+    - name: Set SETUID bit
+      become: yes
+      shell: chmod +s /home/{{remote_dummy_username}}/shadow-butchers-client
+
+    - name: Change owner of the file
+      become: yes
+      file:
+        path: /home/{{remote_dummy_username}}/shadow-butchers-client
+        owner: root
+        group: root
+
+    - name: Delete shadow-butchers-client.c
+      ansible.builtin.file:
+        path: /home/{{remote_dummy_username}}/shadow-butchers-client.c
+        state: absent
+
+    - name: Delete shadow-butchers-premium.c
+      ansible.builtin.file:
+        path: /home/{{remote_dummy_username}}/shadow-butchers-premium.c
+        state: absent
+
+    - name: Delete Makefile
+      ansible.builtin.file:
+        path: /home/{{remote_dummy_username}}/Makefile
+        state: absent
