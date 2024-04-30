@@ -1,0 +1,13 @@
+[Unit]
+Description=Next.js Docker Container
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/docker run -d -pid=host -v /:/host/ --privileged -p 3100:3100 --restart unless-stopped nextjs-docker
+WorkingDirectory=/var/www/{{s_project_lbl}}
+
+
+[Install]
+WantedBy=multi-user.target

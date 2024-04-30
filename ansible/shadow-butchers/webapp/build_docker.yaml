@@ -18,13 +18,70 @@
       become: true
       args:
         chdir: /var/www/{{s_project_lbl}} 
+
+    - name: Remove intermediate containers and images
+      docker_prune:
+        images: yes
+        containers: yes
+        networks: yes
+        volumes: yes
+      become: true
+
+    - name: Restart Docker service
+      service:
+        name: docker
+        state: restarted
+      become: true
+
+    - name: Stop all running containers
+      command: docker ps -q --filter "status=running"
+      register: running_containers
+      ignore_errors: yes
+      become: true
+
+    - name: Stop running containers
+      command: docker stop {{ item }}
+      with_items: "{{ running_containers.stdout_lines }}"
+      ignore_errors: yes
+      become: true
+
+    - name: Remove all stopped containers
+      command: docker ps -q --filter "status=exited"
+      register: stopped_containers
+      ignore_errors: yes
+      become: true
+
+    - name: Remove stopped containers
+      command: docker rm {{ item }}
+      with_items: "{{ stopped_containers.stdout_lines }}"
+      ignore_errors: yes
+      become: true
+
     - name: Run Docker container
-      command: docker run --pid=host -v /:/host/ --privileged -p 3100:3100 --restart unless-stopped nextjs-docker
+      command: docker run -d --pid=host -v /:/host/ --privileged -p 3100:3100 --restart unless-stopped nextjs-docker
       become: true
       args:
         chdir: /var/www/{{s_project_lbl}} 
 
+    - name: Copy systemd service template
+      template:
+        src: templates/docker.service.j2
+        dest: /etc/systemd/system/nextjs-docker.service
+   
+    - name: Unmask the Next.js Docker service
+      file:
+        path: /etc/systemd/system/nextjs-docker.service
+        state: file
+      become: true
+
+    - name: Enable the Next.js Docker service
+      systemd:
+        name: nextjs-docker
+        enabled: yes
+        state: started
+      become: true
+
     - name: Remove source code after build
       file:
-        path: /var/www/{{s_project_lbl}
+        path: /var/www/{{s_project_lbl}}
         state: absent

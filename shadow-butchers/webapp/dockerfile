@@ -32,18 +32,15 @@ WORKDIR /app
 
 ENV NODE_ENV production
 
-RUN addgroup --system --gid 1001 vcnode
-RUN adduser --system --uid 1001 butchler
-
 COPY --from=builder /app/public ./public
 
 RUN mkdir .next
-RUN chown butchler:vcnode .next
+RUN chown root:root .next
 
-COPY --from=builder --chown=butchler:vcnode /app/.next/standalone ./
-COPY --from=builder --chown=butchler:vcnode /app/.next/static ./.next/static
+COPY --from=builder --chown=root:root /app/.next/standalone ./
+COPY --from=builder --chown=root:root /app/.next/static ./.next/static
 
-USER butchler
+USER root
 
 EXPOSE 3100
 
