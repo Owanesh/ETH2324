@@ -44,12 +44,6 @@
         group: matteo
         mode: '0700'
 
-    - name: Create a login banner with NSA reference and grilling humor
-      copy:
-        content: |
-          ⚠️ WARNING: This system is under constant surveillance by the GRILL (Government Reconnaissance of Infiltration, Larceny, and Lusciousness) agency. Unauthorized access will be treated like an overcooked steak - thoroughly burnt. 🔥🥩
-        dest: /etc/issue.net
-
     - name: Set Russian language for root user
       lineinfile:
         path: /root/.bashrc
