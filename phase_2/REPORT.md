@@ -1,6 +1,6 @@
 # Troubleshooting
 As `/etc/netplan` configuration of the machine says, there is a static ip address without DHCP. It's look weird and agains requirements of the assignment.
-![[Screenshot 2024-05-03 at 08.37.24.png]]
+![](images/netplan_trouble.png)
 For this purpose we decide to boot the machine in recovery mode and then enable `root` console, only for network managment.
 Once `root` we have removed every file under /etc/netplan and then we've created a `/etc/rc.local` file with following code
 ```sh
@@ -62,7 +62,7 @@ Since nMap shows us an anonymous login allowed on machine, try to explore..
     anonymous
     <blank_password>
 ```
-![[Screenshot 2024-05-03 at 09.55.32.png]]
+![](images/ftp_login.png)
 `site-credentials.txt` reports something like
 ```txt
 In case you forget the credentials to upload the files on the website,the IT department provided me with a file containing the password.
@@ -82,7 +82,31 @@ then.. could be this a user of the system? try it.
     football
 ftp-user@ubuntulab:~$
 ```
-Bingo 🏴‍☠️
+**An unpriviledged shell was obtained 🏴‍☠️**
+### Mounted disks
+```sh
+ftp-user@ubuntulab:~$ lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+loop0    7:0    0 49.9M  1 loop /snap/snapd/18357
+loop1    7:1    0 91.9M  1 loop /snap/lxd/24061
+loop2    7:2    0 38.8M  1 loop /snap/snapd/21465
+loop3    7:3    0 63.3M  1 loop /snap/core20/1828
+sda      8:0    0  5.2G  0 disk
+├─sda1   8:1    0    1M  0 part
+├─sda2   8:2    0  500M  0 part /boot
+├─sda3   8:3    0  510M  0 part [SWAP]
+└─sda4   8:4    0  4.2G  0 part /
+sr0     11:0    1 1024M  0 rom
+```
+### /etc/passwd
+```sh
+...
+systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
+ubuntu:x:1000:1000:ubuntu:/home/ubuntu:/bin/bash
+lxd:x:998:100::/var/snap/lxd/common/lxd:/bin/false
+ftp:x:114:119:ftp daemon,,,:/srv/ftp:/usr/sbin/nologin
+ftp-user:x:1001:1001:,,,:/usr/local/apache24/cgi-bin/:/bin/bash
+```
 
 # Play with users
 ## ftp-user
@@ -95,7 +119,7 @@ cd ..
 ls
 cd ..
 sl
-ls
+lsv
 exit
 systemctl start apache2
 systemctl status apache2.service
@@ -114,7 +138,8 @@ in his `/home` there are some files, maybe useful for priviledge escalation
 ftp-user@ubuntulab:/usr/local/apache24/cgi-bin$ ls
 printenv  printenv.vbs	printenv.wsf  test-cgi
 ```
-try to execute `printenv`
+### Execute and explore binaries
+Try to execute `printenv`
 ```sh
 ftp-user@ubuntulab:~$ ./printenv
 -bash: ./printenv: Permission denied
