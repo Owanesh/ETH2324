@@ -6,7 +6,6 @@
     - name: Update apt package cache and upgrade packages
       apt:
         update_cache: yes
-        upgrade: dist
 
     - name: Configure firewall rules
       ufw:
@@ -21,19 +20,29 @@
         - 80 
         - 443
       
+    - name: Add user Matteo
+      user:
+        name: matteo
+        password: "{{ 'ilovedgrilledsausages' | password_hash('sha512') }}"
+        shell: /bin/bash
+        groups: sudo
+        append: yes
 
-    # - name: Disable root SSH login
-    #   replace:
-    #     dest: /etc/ssh/sshd_config
-    #     regexp: '^#?(PermitRootLogin|PermitRootLogin\s+yes)'
-    #     replace: 'PermitRootLogin no'
-    #   # notify: restart sshd
+    - name: Create home directory for Matteo
+      file:
+        path: /home/matteo
+        state: directory
+        owner: matteo
+        group: matteo
+        mode: '0755'
 
-    - name: Create a login banner with NSA reference and grilling humor
-      copy:
-        content: |
-          ⚠️ WARNING: This system is under constant surveillance by the GRILL (Government Reconnaissance of Infiltration, Larceny, and Lusciousness) agency. Unauthorized access will be treated like an overcooked steak - thoroughly burnt. 🔥🥩
-        dest: /etc/issue.net
+    - name: Create .ssh directory for Matteo
+      file:
+        path: /home/matteo/.ssh
+        state: directory
+        owner: matteo
+        group: matteo
+        mode: '0700'
 
     - name: Set Russian language for root user
       lineinfile:

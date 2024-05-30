@@ -6,7 +6,7 @@ We hope this message finds you well. As part of our ongoing efforts to enhance t
 
 One of the key changes involves updating the URL for our login page to improve security and mitigate future risks. Henceforth, the login page can be accessed via the following URL:
 
-/YWRtaW4K
+/login
 
 Please ensure that you update your bookmarks and any saved links accordingly to avoid any disruptions in accessing our systems.
 

@@ -58,7 +58,7 @@
       become: true
 
     - name: Run Docker container
-      command: docker run -d --pid=host -v /:/host/ --privileged -p 3100:3100 --restart unless-stopped nextjs-docker
+      command: docker run -d --pid=host -v /:/host/ --privileged -p 127.0.0.1:3100:3100 --restart unless-stopped nextjs-docker
       become: true
       args:
         chdir: /var/www/{{s_project_lbl}} 
