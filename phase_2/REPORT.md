@@ -1,22 +1,34 @@
 # Troubleshooting
-As `/etc/netplan` configuration of the machine says, there is a static ip address without DHCP. It's look weird and agains requirements of the assignment.
+As we tried connecting to the `.ova` we were provided, we would not be able to locate the machine, despite attempting to scan every single host of our network interface using nmap
+```sh
+┌──(kali㉿kali)-[~]
+└─$ sudo nmap -sV -A 192.168.1.0/24
+```
+Even by trying to locate the machine itself by checking our ARP table, as its directly connected to us:
+```sh
+┌──(kali㉿kali)-[~]
+└─$ arp -a
+```
+Which is very odd, as the machine should have obtained an ip address from the DHCP service...
+
+However, after a while, we figured out that the machine *does* in fact have an ip assigned to it: by booting the machine in recovery mode and enabling the `root` console selecting the root console, we in fact found out that in `/etc/netplan` there is a static ip address *without* DHCP, which goes against the requirements of the assignment.
 ![](images/netplan_trouble.png)
-For this purpose we decide to boot the machine in recovery mode and then enable `root` console, only for network managment.
-Once `root` we have removed every file under /etc/netplan and then we've created a `/etc/rc.local` file with following code
+Once `root`, we have removed every file under `/etc/netplan` and then we've created a new file `/etc/rc.local` file with following content
 ```sh
 #!/bin/bash
 dhclient
 exit 0
 ```
-then `chmod 755 /etc/rc.local` and then, enable and restart the service (may take a while)
+then `chmod 755 /etc/rc.local` and then, enable and restart the service (may take a while), finally execute:
 ```sh
 systemctl enable rc-local
 systemctl restart rc-local
 ```
+We did **not** tamper with the machine in any other way while in recovery mode, we just needed to perform the above to actually begin with the assignment.
 
 # Information Gathering
-## Scanning
-### nMap
+We've started from a very quick and clean `nmap`, which revealed the following output:
+
 ```sh
 ┌──(kali㉿kali)-[~]
 └─$ sudo nmap -sV -A 192.168.56.2
@@ -50,11 +62,11 @@ MAC Address: 08:00:27:61:9A:82 (Oracle VirtualBox virtual NIC)
 Device type: general purpose
 Running: Linux 4.X|5.X
 ```
-### ffuf
+As we can see there is not much available:
+- an FTP with anonymous login enabled 
+- an SSH service  
 
-
-## Dump informations
-### FTP
+## FTP
 Since nMap shows us an anonymous login allowed on machine, try to explore..
 ```sh
 ┌──(kali㉿kali)-[~]
@@ -77,13 +89,14 @@ md5:37b4e2d82900d5e94b8da524fbeb33c0 -> football
 ```
 then.. could be this a user of the system? try it.
 ```sh
-──(kali㉿kali)-[~]
+┌─(kali㉿kali)-[~]
 └─$ ssh ftp-user@192.168.56.2
     football
 ftp-user@ubuntulab:~$
 ```
 **An unpriviledged shell was obtained 🏴‍☠️**
-### Mounted disks
+
+## Mounted disks
 ```sh
 ftp-user@ubuntulab:~$ lsblk
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
@@ -98,7 +111,7 @@ sda      8:0    0  5.2G  0 disk
 └─sda4   8:4    0  4.2G  0 part /
 sr0     11:0    1 1024M  0 rom
 ```
-### /etc/passwd
+## /etc/passwd
 ```sh
 ...
 systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
