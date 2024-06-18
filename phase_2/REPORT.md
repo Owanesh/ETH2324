@@ -324,3 +324,18 @@ One thing we did to cover our traces was to change the creation date of the publ
 ```sh
 touch -t YYYYMMDDhhmm id_rsa.pub
 ```
+# Clearing the tracks
+## Removing bash histories
+After we gained access and installed the `ssh` keys, we started to clear our traces. We started by removing all the `.bash_history` from all the users so that all the commands we issued will not be seen.
+```sh
+rm /ftp-user/.bash_history
+rm /ubuntu/.bash_history
+rm /root/.bash_history
+```
+## Clearing the logs
+We then cleared all the logs from the system. The logs are stored in `/var/log` and are divided by categories. We decided not to remove the files entirely, but to just empty them out.
+```sh
+truncate -s 0 /var/log/auth.log
+truncate -s 0 /var/log/cron.log
+truncate -s 0 /var/log/httpd
+```
