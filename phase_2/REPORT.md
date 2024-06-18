@@ -294,7 +294,7 @@ root@ubuntulab:/home/ubuntu#
 We are aware that this is a rather trivial path, but we wanted to include it for completeness nontheless, as it's related to the SSH foothold path.
 
 ## 🔴 via LXD
-This path leverages a vulnerability within `lxd`, which involves in mounting the file system with `root` privileges, which requires to be `sudoer`.
+We could exploit `lxd`, mounting the file system with `root` privileges, which requires to be `sudoer`.
 
 Now, `ftp-user` is not a sudoer, but `ubuntu` is, therefore we wanted to include this path given the presence of `lxd` within the machine.
 
@@ -305,4 +305,22 @@ ubuntu@ubuntulab:~$ lxc start test
 ubuntu@ubuntulab:~$ lxc exec test bash
 
 root@test:~# 
+```
+# Persistence
+We decided that to be persistent in the machine we would use the ssh public key authentication. In our machines we generated the ssh keys
+```sh
+ssh-keygen
+```
+Then we transfered the public key `id_rsa.pub` into the machine and then we added the content of it into the `authorized_keys` file
+```sh
+cat id_rsa.pub > authorized_keys
+```
+In our machines we changed the permission of the private key `id_rsa` to be `600`
+```sh
+chmod 600 id_rsa
+```
+And now we can login via `ssh` into the `root` account without needing the password and whenever we want.
+One thing we did to cover our traces was to change the creation date of the public key, so that it would not be easily detected. This can be done with the following command.
+```sh
+touch -t YYYYMMDDhhmm id_rsa.pub
 ```
