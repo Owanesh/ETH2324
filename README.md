@@ -21,7 +21,7 @@ Welcome to the repository for the **vCorp CTF Environment**, part of the master'
 This project is part of a two-phase practical assignment in the course:
 
 ### Phase 1: Build and Send a Vulnerable VM
-Students design and set up a VM with exploitable vulnerabilities. The goal is to challenge another team by requiring them to identify and exploit the vulnerabilities. 
+We have design and set up a VM with exploitable vulnerabilities. The goal is to challenge another team by requiring them to identify and exploit the vulnerabilities. 
 
 In this phase:
 - A **vulnerable VM** is prepared using Ansible.
